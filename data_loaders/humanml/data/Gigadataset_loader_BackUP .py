@@ -59,9 +59,9 @@ class GigaHandsT2M(Dataset):
     This class is intended to be used internally by a wrapper that conforms to MDM's dataset expectations.
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
-                 side='both', split='train', device='cpu',
+                 side='left', split='train', device='cpu',
                  num_frames=120, dmvb_size=126, dmvb_layout='full'):
-        assert side in ['left', 'right', 'both']
+        assert side in ['left', 'right']
         self.side = side
         self.root_dir = root_dir
         self.device = device
@@ -103,7 +103,7 @@ class GigaHandsT2M(Dataset):
             scene = ann['scene']
             seq = ann['sequence']
             text_list = ann['rewritten_annotation']
-            motion_path = pjoin(self.root_dir, scene, 'keypoints_3d', seq, f'xyz_{self.side}.npy')
+            motion_path = pjoin(self.root_dir, scene, 'keypoints_3d', seq, f'dmvb_{self.side}.npy')
 
             if os.path.exists(motion_path):
                 for text in text_list:
@@ -118,27 +118,15 @@ class GigaHandsT2M(Dataset):
 
 
     def __getitem__(self, idx):
+        print("🚨 ERROR: Using GigaHandsT2M instead of ASLHandsT2M!")
 
-        # Load the current sample's annotation text
-        # motion_path, text = self.samples[idx]
-
-        # # By default: load the motion that matches this sample's path
-        # motion = np.load(motion_path).astype(np.float32)
-
-        # --- Identity training mode (optional) ---
-        # If you want to force every sample to use the *same* motion
-        # regardless of index (e.g., to test memorization),
-        # Always use the chosen identity motion (ignores dataset index)
-        fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
-        fixed_seq = "018"
-        motion_path = pjoin(
-            self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, "xyz_both.npy"
-        )
-        _, text = self.samples[idx]
+        # keep the text of the current sample
+        motion_path, text = self.samples[idx]
+        # but always load the motion of the first sample
+        # motion_path, _ = self.samples[0]
         motion = np.load(motion_path).astype(np.float32)
 
-
-        # motion = build_dmvb(motion, layout_type=self.dmvb_layout)
+        motion = build_dmvb(motion, layout_type=self.dmvb_layout)
         # print (f"[DEBUG] Loaded motion from {motion_path} with shape {motion.shape}")
         # Normalize
         motion = (motion - self.mean) / (self.std + 1e-8)
@@ -150,9 +138,7 @@ class GigaHandsT2M(Dataset):
                 start = np.random.randint(0, T - self.fixed_len + 1) # start = 0  #  
                 motion = motion[start:start + self.fixed_len]
             else:
-                # Pad by repeating the last frame instead of zeros
-                last_frame = motion[-1][None, :]                     # shape (1, D)
-                pad = np.repeat(last_frame, self.fixed_len - T, axis=0)  # shape (fixed_len - T, D)
+                pad = np.zeros((self.fixed_len - T, motion.shape[1]), dtype=np.float32)
                 motion = np.concatenate([motion, pad], axis=0)
             m_length = self.fixed_len
         else:
@@ -205,13 +191,13 @@ class GigaHandsML3D(Dataset):
         self.device = kwargs.get('device', 'cpu')
 
         # Paths (can be overridden via kwargs)
-        self.root_dir = kwargs.get('root_dir', r"D:\repos\refactored_MDM\GigaHands_Data\coverted_motions\hand_poses_xyz")
-        self.annotation_file = kwargs.get('annotation_file', r"D:\repos\refactored_MDM\GigaHands_Data\annotations_v2.jsonl")
-        self.mean_std_dir = kwargs.get('mean_std_dir', r"D:\repos\refactored_MDM\GigaHands_Data\coverted_motions\norm_stats")
+        self.root_dir = kwargs.get('root_dir', r"D:\repos\mdm_custom_training\converted_motions\hand_poses_dmvb")
+        self.annotation_file = kwargs.get('annotation_file', r"D:\repos\mdm_custom_training\converted_motions\annotations_v2.jsonl")
+        self.mean_std_dir = kwargs.get('mean_std_dir', r"D:\repos\mdm_custom_training\converted_motions\hand_poses_dmvb\norm_stats")
 
         self.fixed_len = kwargs.get('fixed_len', 0)
         self.use_cache = kwargs.get('use_cache', True)
-        self.side = kwargs.get('side', 'both')
+        self.side = kwargs.get('side', 'left')
 
         # Load mean/std
         mean_path = pjoin(self.mean_std_dir, f'mean_{self.side}.npy')
@@ -266,7 +252,7 @@ if __name__ == '__main__':
     parser.add_argument('--root_dir', required=True)
     parser.add_argument('--annotation_file', required=True)
     parser.add_argument('--mean_std_dir', required=True)
-    parser.add_argument('--side', choices=['left', 'right','both'], default='both')
+    parser.add_argument('--side', choices=['left', 'right'], default='left')
     parser.add_argument('--split', default='train')
     args = parser.parse_args()
 

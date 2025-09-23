@@ -26,6 +26,9 @@ def get_dataset_class(name):
     elif name == "gigahands":
         from data_loaders.humanml.data.Gigadataset_loader import GigaHandsML3D
         return GigaHandsML3D
+    # elif name == 'asl':
+    #     from data_loaders.humanml.data.ASL_loader import ASLHandsML3D
+    #     return ASLHandsML3D
     else:
         raise ValueError(f'Unsupported dataset name [{name}]')
     
@@ -50,9 +53,6 @@ def get_dataset(name, num_frames, split='train', hml_mode='train', abs_path='.',
     elif name == "gigahands":
         dataset = DATA(
             mode=hml_mode,
-            annotation_file=r"D:\repos\mdm_custom_training\converted_motions\annotations_v2.jsonl",
-            root_dir=r"D:\repos\mdm_custom_training\converted_motions\hand_poses_dmvb",
-            mean_std_dir=r"D:\repos\mdm_custom_training\converted_motions\hand_poses_dmvb\norm_stats",
             split=split,
             num_frames=num_frames,
             device=device

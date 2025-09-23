@@ -2,10 +2,12 @@
 
 from dataset_api.gigahands.gigahands_interface import GigaHandsInterface
 from dataset_api.dataset_interface import DatasetInterface
-
+from dataset_api.gigahands.asl_interface import ASLInterface
 class DatasetInterfaceRegistry:
     registry = {
         "gigahands": GigaHandsInterface(),
+        #  "gigahands": ASLInterface(),
+        # "asl": ASLInterface(),
         # Add other datasets here
     }
 

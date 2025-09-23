@@ -66,9 +66,11 @@ def create_model_and_diffusion(args, data=None):
 # === CONFIG ===
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/full_run_132/model000065000.pt",
-    output_dir="save/full_run_132/infer_test",
-    text_prompt="Open the side clamp on the file by pressing the lever and gently pulling it away",
+    model_path="save/ASL_01/model000015000.pt",
+    output_dir="save/ASL_01/infer_test",
+    text_prompt="she",
+
+
     num_samples=1,
     num_repetitions=1,
     absolote_frame_connt = 253,
@@ -118,7 +120,7 @@ def denormalize(motion, mean, std):
 def main(args=ARGS):
     fixseed(args.seed)
     dist_util.setup_dist(args.device)
-    
+
     dataset_interface = DatasetInterfaceRegistry.get(args.dataset)
     get_loader_fn = dataset_interface.get_function("get_loader")
     data = get_loader_fn(args)

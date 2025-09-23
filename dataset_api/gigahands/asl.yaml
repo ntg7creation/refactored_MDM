@@ -17,7 +17,7 @@ batch_size: 64
 train_platform_type: NoPlatform
 external_mode: False
 
-dataset: gigahands
+dataset: asl
 data_dir:
 
 # --- DMVB control ---
@@ -58,7 +58,7 @@ noise_schedule: cosine
 diffusion_steps: 50
 sigma_small: True
 
-save_dir: save/dual_identity_126
+save_dir: save/ASL_01
 overwrite: False
 lr: 0.0001
 weight_decay: 0.0

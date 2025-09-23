@@ -1349,7 +1349,7 @@ class GaussianDiffusion:
             #TODO bring back old loss calculation 
 
             # terms["loss"] = terms["rot_mse"] + terms.get('vb', 0.) +\
-            #                 (self.lambda_vel * terms.get('vel_mse', 0.)) +\
+            #                 (self.lambda_vel * terms.get('vel_mse', 0.)) +\ #TODO add this velocity loss back but after confirming vel is being calculated probpoly 
             #                 (self.lambda_rcxyz * terms.get('rcxyz_mse', 0.)) + \
             #                 (self.lambda_target_loc * terms.get('target_loc', 0.)) + \
             #                 (self.lambda_fc * terms.get('fc', 0.))

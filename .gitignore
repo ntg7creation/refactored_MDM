@@ -142,3 +142,7 @@ slurm**/
 dataset/HumanML3D/texts/
 
 dataset/
+
+ASL_Data/
+
+GigaHands_Data/

@@ -183,6 +183,11 @@ def main():
     #     print(f"  {k}: {v}")
 
     model, diffusion = create_model_and_diffusion(my_args, data)
+
+    assert hasattr(model, "cond_mask_prob")
+    print(f"[CFG] cond_mask_prob in model: {model.cond_mask_prob}")
+    assert abs(model.cond_mask_prob - args.cond_mask_prob) < 1e-8
+
     model.to(dist_util.dev())
     if model.rot2xyz is not None:
         model.rot2xyz.smpl_model.eval()

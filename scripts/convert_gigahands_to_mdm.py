@@ -1,4 +1,4 @@
-# mdm_custom_training/src/convert_gigahands_to_mdm.py
+
 
 import os
 import json

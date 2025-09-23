@@ -8,7 +8,7 @@ import sys
 # Make repo root importable (so we can import your loader module)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from data_loaders.humanml.data.Gigadataset_loader import GigaHandsT2M
+from dataset_api.gigahands.Gigadataset_loader import GigaHandsT2M
 
 
 def _build_fake_dataset(tmp: Path, side="left", D=263, T0=80, T1=120):

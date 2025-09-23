@@ -8,6 +8,11 @@ NUM_WORKERS = 0 if platform.system() == 'Windows' else 8  # or any number you fi
 
 
 def get_dataset_class(name):
+    # raise RuntimeError(
+    # f"[DEPRECATED] get_dataset_class() was called with '{name}'. "
+    # "This function is no longer supported. "
+    # "Use DatasetInterfaceRegistry.get(name) instead."
+    # )
     if name == "amass":
         from .amass import AMASS
         return AMASS
@@ -24,7 +29,7 @@ def get_dataset_class(name):
         from data_loaders.humanml.data.dataset import KIT
         return KIT
     elif name == "gigahands":
-        from data_loaders.humanml.data.Gigadataset_loader import GigaHandsML3D
+        from dataset_api.gigahands.gigadataset_loader import GigaHandsML3D
         return GigaHandsML3D
     # elif name == 'asl':
     #     from data_loaders.humanml.data.ASL_loader import ASLHandsML3D
@@ -71,9 +76,12 @@ def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='tr
     collate = get_collate_fn(name, hml_mode, pred_len, batch_size)
 
     loader = DataLoader(
-        dataset, batch_size=batch_size, shuffle=True,
+        dataset, 
+        batch_size=batch_size, 
+        shuffle=True,
         num_workers=NUM_WORKERS,
-          drop_last=True, collate_fn=collate
+        drop_last=True, 
+        collate_fn=collate
     )
 
     return loader

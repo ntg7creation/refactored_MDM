@@ -1,4 +1,4 @@
-# refactored_MDM/src/compute_norm_stats.py
+
 
 import os
 import numpy as np

@@ -3,7 +3,7 @@ import os
 import yaml
 from torch.utils.data import DataLoader
 from dataset_api.dataset_interface import DatasetInterface, DatasetFunctions
-from data_loaders.humanml.data.ASL_loader import ASLHandsML3D  # Update this import path if needed
+from dataset_api.ASL.ASL_loader import ASLHandsML3D  # Update this import path if needed
 
 class ASLInterface(DatasetInterface):
     def __init__(self):

@@ -1,0 +1,118 @@
+.
+├── .gitignore
+├── DiP.md
+├── GigaHands_Data/
+│   ├── annotations_v2.jsonl
+├── LICENSE
+├── README.md
+├── cog.yaml
+├── compute_asl_mean_std.py
+├── compute_mean_std_2Hands.py
+├── compute_normalization.py
+├── convert_gigahands_to_mdm.py
+├── convert_gigahands_to_mdm_2Hands.py
+├── convert_jsonl_to_dmvb_npy.py
+├── data_loaders/
+│   ├── a2m/
+│   │   ├── dataset.py
+│   │   ├── humanact12poses.py
+│   │   └── uestc.py
+│   ├── get_data.py
+│   ├── humanml/
+│   │   ├── README.md
+│   │   ├── common/
+│   │   │   ├── quaternion.py
+│   │   │   └── skeleton.py
+│   │   ├── motion_loaders/
+│   │   │   ├── __init__.py
+│   │   │   ├── comp_v6_model_dataset.py
+│   │   │   ├── dataset_motion_loader.py
+│   │   │   └── model_motion_loaders.py
+│   │   ├── networks/
+│   │   │   ├── __init__.py
+│   │   │   ├── evaluator_wrapper.py
+│   │   │   ├── modules.py
+│   │   │   └── trainers.py
+│   │   ├── scripts/
+│   │   │   └── motion_process.py
+│   │   └── utils/
+│   │       ├── bert_word_vectorizer.py
+│   │       ├── get_opt.py
+│   │       ├── metrics.py
+│   │       ├── paramUtil.py
+│   │       ├── plot_script.py
+│   │       ├── utils.py
+│   │       └── word_vectorizer.py
+│   ├── humanml_utils.py
+│   └── tensors.py
+├── dataset_api/
+│   ├── dataset_interface.py
+│   ├── dataset_registry.py
+│   └── gigahands/
+│       ├── asl.yaml
+│       ├── asl_interface.py
+│       ├── gigahands.yaml
+│       └── gigahands_interface.py
+├── diffusion/
+│   ├── fp16_util.py
+│   ├── gaussian_diffusion.py
+│   ├── logger.py
+│   ├── losses.py
+│   ├── nn.py
+│   ├── resample.py
+│   └── respace.py
+├── environment.yml
+├── eval/
+│   ├── eval_humanact12_uestc.py
+│   ├── eval_humanml.py
+│   └── unconstrained/
+│       ├── evaluate.py
+│       ├── metrics/
+│       │   ├── kid.py
+│       │   └── precision_recall.py
+│       └── models/
+│           ├── stgcn.py
+│           └── stgcnutils/
+│               └── graph.py
+├── extract_gloss_video_ids.py
+├── file_structure.txt
+├── list_structure.py
+├── model/
+│   ├── BERT/
+│   │   ├── BERT_encoder.py
+│   ├── cfg_sampler.py
+│   ├── mdm.py
+│   ├── rotation2xyz.py
+│   └── smpl.py
+├── pytest.ini
+├── sample/
+│   ├── compare_loss.py
+│   ├── compare_loss_dmvb.py
+│   ├── denoise_test.py
+│   ├── generate.py
+│   ├── inference_lite.py
+│   ├── inference_lite_ASL.py
+│   ├── old/
+│   │   ├── generate_test.py
+│   │   └── inference_test.py
+│   ├── reconstruct_inference.py
+│   └── reconstruct_inference_asl.py
+├── tests/
+│   └── test_gigahands_loader.py
+├── train/
+│   ├── train_mdm.py
+│   ├── train_mdm_test.py
+│   ├── train_platforms.py
+│   ├── training_loop.py
+│   └── training_loop_test.py
+└── utils/
+    ├── PYTORCH3D_LICENSE
+    ├── config.py
+    ├── dist_util.py
+    ├── fixseed.py
+    ├── loss_util.py
+    ├── misc.py
+    ├── model_util.py
+    ├── parser_util.py
+    ├── rotation_conversions.py
+    └── sampler_util.py

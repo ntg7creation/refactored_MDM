@@ -136,6 +136,18 @@ def main():
         pred_len=pred_len,
         device=device,
     )
+    # logging.info("📦 Creating data loader...")
+    # dataset_interface = DatasetInterfaceRegistry.get(args.dataset)
+
+    # data = dataset_interface.get_loader(
+    #     name=args.dataset,
+    #     batch_size=batch_size,
+    #     num_frames=num_frames,
+    #     fixed_len=pred_len + context_len,
+    #     pred_len=pred_len,
+    #     device=device,
+    # )
+
 
     # ---------------------------- Model Setup ---------------------------- #
     logging.info("🧠 Creating model and diffusion...")

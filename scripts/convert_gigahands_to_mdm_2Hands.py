@@ -1,4 +1,4 @@
-# refactored_MDM/src/convert_gigahands_to_mdm_2Hands.py
+
 
 import os
 import json

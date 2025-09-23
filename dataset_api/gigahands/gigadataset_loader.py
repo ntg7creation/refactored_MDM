@@ -87,9 +87,17 @@ class GigaHandsT2M(Dataset):
 
         self.mean = trimmed_mean
         self.std = trimmed_std
+        # make sure device is valid
+        if isinstance(device, str):
+            dev = torch.device(device)
+        elif isinstance(device, torch.device):
+            dev = device
+        else:
+            dev = torch.device("cpu")
 
-        self.mean_gpu = torch.tensor(self.mean).to(device)[None, :, None, None]
-        self.std_gpu = torch.tensor(self.std).to(device)[None, :, None, None]
+        self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
+
 
         self.samples = []  # list of (motion_path, text)
         self._load_annotations(annotation_file, split)
@@ -239,9 +247,16 @@ class GigaHandsML3D(Dataset):
             dmvb_size=self.dmvb_size,
             dmvb_layout=self.dmvb_layout,
         )
+        if isinstance(self.device, str):
+            dev = torch.device(self.device)
+        elif isinstance(self.device, torch.device):
+            dev = self.device
+        else:
+            dev = torch.device("cpu")
 
-        self.mean_gpu = torch.tensor(self.mean).to(self.device)[None, :, None, None]
-        self.std_gpu = torch.tensor(self.std).to(self.device)[None, :, None, None]
+        self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
+
 
         assert len(self.t2m_dataset) > 0, 'GigaHands dataset appears empty.'
 

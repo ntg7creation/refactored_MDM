@@ -70,10 +70,10 @@ eval_during_training: False
 eval_rep_times: 3
 eval_num_samples: 1000
 
-log_interval: 100
+log_interval: 1000
 gen_during_training: true
 outputsave_interval: 10000
-save_interval: 5000
+save_interval: 10000
 num_steps: 600000
 num_frames: 60
 resume_checkpoint:

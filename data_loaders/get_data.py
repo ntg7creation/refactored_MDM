@@ -31,9 +31,11 @@ def get_dataset_class(name):
     elif name == "gigahands":
         from dataset_api.gigahands.gigadataset_loader import GigaHandsML3D
         return GigaHandsML3D
-    # elif name == 'asl':
-    #     from data_loaders.humanml.data.ASL_loader import ASLHandsML3D
-    #     return ASLHandsML3D
+        # from dataset_api.ASL.ASL_loader import ASLHandsML3D
+        # return ASLHandsML3D
+    elif name == 'asl':
+        from dataset_api.ASL.ASL_loader import ASLHandsML3D
+        return ASLHandsML3D
     else:
         raise ValueError(f'Unsupported dataset name [{name}]')
     

@@ -17,7 +17,11 @@ from train.train_platforms import WandBPlatform, ClearmlPlatform, TensorboardPla
 
 def main():
     args = train_args()
-    fixseed(args.seed)
+    # 🔧 Force GigaHands to use BERT + Transformer Decoder
+    if args.dataset in ["gigahands", "humanml"]:  # since you remapped humanml -> GigaHands
+        args.text_encoder_type = "bert"
+        args.arch = "trans_dec"
+        fixseed(args.seed)
     train_platform_type = eval(args.train_platform_type)
     train_platform = train_platform_type(args.save_dir)
     train_platform.report_args(args, name='Args')
@@ -32,6 +36,10 @@ def main():
 
     dist_util.setup_dist(args.device)
 
+    print("📋 Parsed args:")
+    for k, v in vars(args).items():
+        print(f"  {k}: {v}")
+
     print("creating data loader...")
 
     data = get_dataset_loader(name=args.dataset, 
@@ -41,6 +49,7 @@ def main():
                               pred_len=args.pred_len,
                               device=dist_util.dev(),)
 
+    args.save_interval = 5000
     print("creating model and diffusion...")
     if not hasattr(args, 'text_encoder_type') or args.text_encoder_type is None:
         raise ValueError("[ERROR] '--text_encoder_type' is missing from args or not parsed correctly.")
@@ -51,6 +60,7 @@ def main():
     model.to(dist_util.dev())
     if model.rot2xyz is not None:
         model.rot2xyz.smpl_model.eval()
+
 
     print('Total params: %.2fM' % (sum(p.numel() for p in model.parameters_wo_clip()) / 1000000.0))
     print("Training...")

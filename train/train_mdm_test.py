@@ -24,6 +24,7 @@ def main():
     # Minimal parser to get dataset name
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", required=True, type=str)
+    
     cli_args = parser.parse_args()
     dataset_name = cli_args.dataset
     # args = train_args()

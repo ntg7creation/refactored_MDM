@@ -42,7 +42,7 @@ def get_model_args(args, data):
 
     if args.dataset == 'humanml' or args.dataset == 'gigahands':
         data_rep = 'hml_vec'
-        njoints = args.DMVB_size
+        njoints =  126 #args.DMVB_size
         nfeats = 1
         all_goal_joint_names = ['pelvis'] + HML_EE_JOINT_NAMES
     elif args.dataset == 'kit':
@@ -76,7 +76,7 @@ def get_model_args(args, data):
 
 def create_gaussian_diffusion(args):
     # default params
-    predict_xstart = True  # we always predict x_start (a.k.a. x0), that's our deal!
+    predict_xstart = False #true  # we always predict x_start (a.k.a. x0), that's our deal!
     steps = args.diffusion_steps
     scale_beta = 1.  # no scaling
     timestep_respacing = ''  # can be used for ddim sampling, we don't use it.

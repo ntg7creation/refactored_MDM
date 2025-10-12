@@ -64,6 +64,10 @@ class MDM(nn.Module):
         self.normalize_output = kargs.get('normalize_encoder_output', False)  # Option to normalize transformer output (#!not typically used in T2M)
 
         self.cond_mode = kargs.get('cond_mode', 'no_cond')            # Type of conditioning ('text', 'action', or 'no_cond') ✅ used in T2M
+        print(f"[MDM INIT] dataset={kargs.get('dataset','?')}, "
+      f"text_encoder_type={kargs.get('text_encoder_type','?')}, "
+      f"cond_mode={self.cond_mode}")
+
         self.cond_mask_prob = kargs.get('cond_mask_prob', 0.)         # Probability of masking condition (for classifier-free guidance) ✅ used in T2M
         self.mask_frames = kargs.get('mask_frames', False)            # Whether to mask invalid frames (#!optional, not always used in T2M)
         self.arch = arch                                               # Model architecture: 'trans_enc', 'trans_dec', or 'gru' ✅ used in T2M
@@ -156,6 +160,7 @@ class MDM(nn.Module):
                 
                 if self.text_encoder_type == 'bert':
                     assert self.arch == 'trans_dec'
+                    print("arch is trans_dec")
                     # assert self.emb_trans_dec == False # passing just the time embed so it's fine
                     print("Loading BERT...")
                     # bert_model_path = 'model/BERT/distilbert-base-uncased'
@@ -256,6 +261,11 @@ class MDM(nn.Module):
         if 'text' in self.cond_mode:
             if 'text_embed' in y.keys():  # caching option
                 enc_text = y['text_embed']
+                # raise RuntimeError(
+                #     "[MDM ERROR] Found 'text_embed' in cond dict! "
+                #     "This means cached embeddings are being used instead of BERT. "
+                #     "Check your dataloader/collator — we expect raw text so BERT is called here."
+                #         )
             else:
                 enc_text = self.encode_text(y['text'])
             if type(enc_text) == tuple:
@@ -308,6 +318,10 @@ class MDM(nn.Module):
 
             if self.text_encoder_type == 'clip':
                 output = self.seqTransDecoder(tgt=xseq, memory=emb, tgt_key_padding_mask=frames_mask)
+                raise RuntimeError(
+                    "[MDM ERROR] CLIP text encoder with Transformer Decoder is not supported. "
+                    "Please use BERT by setting text_encoder_type='bert'."
+                        )
             elif self.text_encoder_type == 'bert':
                 output = self.seqTransDecoder(tgt=xseq, memory=emb, memory_key_padding_mask=text_mask, tgt_key_padding_mask=frames_mask)  # Rotem's bug fix
             else:
@@ -320,7 +334,10 @@ class MDM(nn.Module):
             xseq = x
             xseq = self.sequence_pos_encoder(xseq)  # [seqlen, bs, d]
             output, _ = self.gru(xseq)
-
+        else:
+            raise ValueError('no architecture selected try using self.arch = trans enc/dec or gru')
+        
+        
         # Extract completed suffix
         if self.is_prefix_comp:
             output = output[self.context_len:]

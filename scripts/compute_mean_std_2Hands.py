@@ -32,7 +32,7 @@ def main():
     sum_sq_feats = None
 
     for path in tqdm(file_paths, desc="Accumulating stats"):
-        motion = np.load(path)  # shape [T, 132]
+        motion = np.load(path)  # shape [T, 126]
         if motion.ndim != 2:
             raise ValueError(f"Unexpected shape {motion.shape} in {path}")
 

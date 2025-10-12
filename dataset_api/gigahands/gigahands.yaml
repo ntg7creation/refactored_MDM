@@ -58,7 +58,7 @@ noise_schedule: cosine
 diffusion_steps: 50
 sigma_small: True
 
-save_dir: save/dual_identity_126
+save_dir: save/test_run_identity
 overwrite: False
 lr: 0.0001
 weight_decay: 0.0
@@ -70,11 +70,11 @@ eval_during_training: False
 eval_rep_times: 3
 eval_num_samples: 1000
 
-log_interval: 1000
+log_interval: 2500
 gen_during_training: true
 outputsave_interval: 10000
 save_interval: 10000
-num_steps: 600000
+num_steps: 80000
 num_frames: 60
 resume_checkpoint:
 

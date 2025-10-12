@@ -25,6 +25,8 @@ def get_dataset_class(name):
     elif name == "humanml":
         from data_loaders.humanml.data.dataset import HumanML3D
         return HumanML3D
+        from dataset_api.gigahands.gigadataset_loader import GigaHandsML3D
+        return GigaHandsML3D
     elif name == "kit":
         from data_loaders.humanml.data.dataset import KIT
         return KIT

@@ -62,13 +62,13 @@ def create_model_and_diffusion(args, data=None):
     model = MDM(**get_model_args(args, data))
     diffusion = create_gaussian_diffusion(args)
     return model, diffusion
-
 # === CONFIG ===
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/dual_identity_126/model000015000.pt",
+    model_path="save/dual_identity_126/model000020000.pt",
     output_dir="save/dual_identity_126/infer_test",
-    text_prompt="hiting the wall very hard like a boxer",
+    # text_prompt="hiting the wall very hard like a boxer",
+    text_prompt="Knock the bottom of the spam can to ensure the spam block is fully released onto the cutting board",
     num_repetitions=1,
     absolote_frame_connt = 253,
     motion_length=5,
@@ -149,7 +149,7 @@ def main(args=ARGS):
         }
     }
 
-
+    # print("[DEBUG] model_kwargs keys:", model_kwargs['y'].keys())
     model_kwargs['y']['text_embed'] = model.encode_text(model_kwargs['y']['text'])
     model_kwargs['y']['uncond'] = False  # disables conditioning entirely
 

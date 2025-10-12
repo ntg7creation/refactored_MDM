@@ -8,6 +8,15 @@ from tqdm import tqdm
 from data_loaders.humanml.utils.word_vectorizer import WordVectorizer
 
 
+def text_to_sum(s: str) -> int:
+    """Convert text to numeric sum (a=1, ..., z=26)."""
+    total = 0
+    for ch in s.lower():
+        if 'a' <= ch <= 'z':
+            total += ord(ch) - ord('a') + 1
+    return total
+
+
 def build_dmvb(raw_motion: np.ndarray, layout_type: str = "full") -> np.ndarray:
     # print(raw_motion.shape)
     if True: #layout_type == "full":
@@ -60,7 +69,23 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='identity'):
+        
+        self.load_mode = load_mode
+                # 🚨 BIG DEBUG BANNER 🚨
+        print("\n" + "="*80)
+        print(f"🚨 INIT GigaHandsT2M DATASET 🚨")
+        print(f" Split: {split}")
+        print(f" Side: {side}")
+        print(f" Root dir: {root_dir}")
+        print(f" Annotation file: {annotation_file}")
+        print(f" Mean/Std dir: {mean_std_dir}")
+        print(f" Num frames (fixed_len): {num_frames}")
+        print(f" DMVB size: {dmvb_size}, Layout: {dmvb_layout}")
+        print(f" Load mode: {self.load_mode}")  
+        print("="*80 + "\n")
+
+
         assert side in ['left', 'right', 'both']
         self.side = side
         self.root_dir = root_dir
@@ -123,31 +148,47 @@ class GigaHandsT2M(Dataset):
     def __len__(self):
         return len(self.samples)    
 
+    def _load_default(self, idx):
+        motion_path, text = self.samples[idx]
+        motion = np.load(motion_path).astype(np.float32)
+        return motion, text
+
+    def _load_identity(self, idx):
+        fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
+        fixed_seq = "018"
+        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, "xyz_both.npy")
+        _, text = self.samples[idx]  # keep original text
+        motion = np.load(motion_path).astype(np.float32)
+        return motion, text
+
+    def _load_dual_identity(self, idx):
+        _, text = self.samples[idx]
+        text_sum = text_to_sum(text)
+        median_val = 593
+        if text_sum <= median_val:
+            fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
+            fixed_seq = "018"
+            label_text = "SLAM THE CAN"
+        else:
+            fixed_scene = "p042-massage"
+            fixed_seq = "001"
+            label_text = "massage your hands"
+        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, f"xyz_{self.side}.npy")
+        motion = np.load(motion_path).astype(np.float32)
+        return motion, label_text
+
 
 
     def __getitem__(self, idx):
 
-        # Load the current sample's annotation text
-        # motion_path, text = self.samples[idx]
-
-        # # By default: load the motion that matches this sample's path
-        # motion = np.load(motion_path).astype(np.float32)
-
-        # --- Identity training mode (optional) ---
-        # If you want to force every sample to use the *same* motion
-        # regardless of index (e.g., to test memorization),
-        # Always use the chosen identity motion (ignores dataset index)
-        fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
-        fixed_seq = "018"
-        motion_path = pjoin(
-            self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, "xyz_both.npy"
-        )
-        _, text = self.samples[idx]
-        motion = np.load(motion_path).astype(np.float32)
+        if self.load_mode == 'identity':
+            motion, text = self._load_identity(idx)
+        elif self.load_mode == 'dual':
+            motion, text = self._load_dual_identity(idx)
+        else:  # default
+            motion, text = self._load_default(idx)
 
 
-        # motion = build_dmvb(motion, layout_type=self.dmvb_layout)
-        # print (f"[DEBUG] Loaded motion from {motion_path} with shape {motion.shape}")
         # Normalize
         motion = (motion - self.mean) / (self.std + 1e-8)
 

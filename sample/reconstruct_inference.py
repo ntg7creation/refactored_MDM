@@ -44,7 +44,7 @@ def main():
     print("🚀 Starting reconstruct_inference.py")
 
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    infer_dir = os.path.join(root, "save", "dual_identity_126", "infer_test")
+    infer_dir = os.path.join(root, "save", "test_run_132", "infer_test")
 
     input_path = os.path.join(infer_dir, "results.json")
     output_path = os.path.join(infer_dir, "reconstructed.jsonl")

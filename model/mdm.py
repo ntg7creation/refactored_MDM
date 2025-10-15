@@ -91,7 +91,7 @@ class MDM(nn.Module):
         self.input_process = InputProcess(self.data_rep, self.input_feats+self.gru_emb_dim, self.latent_dim)  # Prepares motion input for transformer ✅ used in T2M
 
         self.emb_policy = kargs.get('emb_policy', 'add')              # Embedding fusion strategy: 'add' or 'concat' ✅ used in T2M
-
+        
         self.sequence_pos_encoder = PositionalEncoding(self.latent_dim, self.dropout, max_len=kargs.get('pos_embed_max_len', 5000))  # Positional encoding for temporal order ✅ used in T2M
         self.emb_trans_dec = emb_trans_dec                            # Whether to inject embedding as class token (used only in 'trans_dec') (#!only used for some T2M variants)
 
@@ -105,6 +105,34 @@ class MDM(nn.Module):
         self.multi_target_cond = kargs.get('multi_target_cond', False)  # Enable multi-joint target conditioning (#!not used in standard T2M)
         self.multi_encoder_type = kargs.get('multi_encoder_type', 'multi')  # Type of target joint encoder (multi/single/split) (#!not used in T2M)
         self.target_enc_layers = kargs.get('target_enc_layers', 1)  # Number of layers in the target encoder (#!not used in T2M)
+
+                # ✅ Final summary of configuration
+        print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🧠 MDM Configuration Summary")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print(f" Dataset:              {self.dataset}")
+        print(f" Conditioning mode:    {self.cond_mode}")
+        print(f" Text encoder:         {text_encoder_type}")
+        print(f" Architecture:         {self.arch}")
+        print(f" Latent dim:           {self.latent_dim}")
+        print(f" Num layers / heads:   {self.num_layers} / {self.num_heads}")
+        print(f" Dropout:              {self.dropout}")
+        print(f" Input feats:          {self.input_feats} ({self.njoints}×{self.nfeats})")
+        print(f" Data rep:             {self.data_rep}")
+        print(f" Translation:          {self.translation}")
+        print(f" Global pos / rot:     {self.glob} / {self.glob_rot}")
+        print(f" Condition mask prob:  {self.cond_mask_prob}")
+        print(f" Embedding policy:     {self.emb_policy}")
+        print(f" Emb TransDec:         {self.emb_trans_dec}")
+        print(f" Prefix comp:          {self.is_prefix_comp}")
+        print(f" Pred len / Ctx len:   {self.pred_len} / {self.context_len}")
+        print(f" Multi-target cond:    {self.multi_target_cond}")
+        print(f" Target enc layers:    {self.target_enc_layers}")
+        print(f" Activation:           {self.activation}")
+        print(f" Normalize output:     {self.normalize_output}")
+        print(f" Ablation flag:        {self.ablation}")
+        print(f" Legacy mode:          {self.legacy}")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
         # Initialize the appropriate joint target conditioning module if enabled
         if self.multi_target_cond:

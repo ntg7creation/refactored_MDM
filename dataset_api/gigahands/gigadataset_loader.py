@@ -69,7 +69,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='identity'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='daul'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨
@@ -169,10 +169,12 @@ class GigaHandsT2M(Dataset):
             fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
             fixed_seq = "018"
             label_text = "SLAM THE CAN"
+            print("Using LEFT hand motion for text sum", text_sum)
         else:
             fixed_scene = "p042-massage"
             fixed_seq = "001"
             label_text = "massage your hands"
+            print("Using RIGHT hand motion for text sum", text_sum)
         motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, f"xyz_{self.side}.npy")
         motion = np.load(motion_path).astype(np.float32)
         return motion, label_text

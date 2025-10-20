@@ -90,8 +90,10 @@ class MDM(nn.Module):
 
         self.input_process = InputProcess(self.data_rep, self.input_feats+self.gru_emb_dim, self.latent_dim)  # Prepares motion input for transformer ✅ used in T2M
 
-        self.emb_policy = kargs.get('emb_policy', 'add')              # Embedding fusion strategy: 'add' or 'concat' ✅ used in T2M
-        
+        # self.emb_policy = kargs.get('emb_policy', 'add')              # Embedding fusion strategy: 'add' or 'concat' ✅ used in T2M
+        self.emb_policy = 'concat' # forcing concat for T2M since add makes no sense
+
+
         self.sequence_pos_encoder = PositionalEncoding(self.latent_dim, self.dropout, max_len=kargs.get('pos_embed_max_len', 5000))  # Positional encoding for temporal order ✅ used in T2M
         self.emb_trans_dec = emb_trans_dec                            # Whether to inject embedding as class token (used only in 'trans_dec') (#!only used for some T2M variants)
 

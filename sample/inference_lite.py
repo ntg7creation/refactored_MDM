@@ -65,10 +65,10 @@ def create_model_and_diffusion(args, data=None):
 # === CONFIG ===
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_run_132/model000014000.pt",
-    output_dir="save/test_run_132/infer_test",
+    model_path="save/test_dual_concat_dual_10_20_mistake/model000020000.pt",
+    output_dir="save/test_dual_concat_dual_10_20_mistake/infer_test",
     # text_prompt="hiting the wall very hard like a boxer",
-    text_prompt="Knock the bottom of the spam can to ensure the spam block is fully released onto the cutting board",
+    text_prompt="p042-massage",
     num_repetitions=1,
     absolote_frame_connt = 253,
     motion_length=5,

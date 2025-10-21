@@ -91,6 +91,8 @@ class GigaHandsInterface(DatasetInterface):
         pred_len = self.config.get("pred_len", 0)
         return t2m_collate(batch, pred_len)
 
+    def print_conend():
+        print("GigaHandsInterface: print_conend() called")
     # ---------------- DIRECT LOADER ----------------
     # def get_loader(self,  num_frames, split="train", batch_size=1,
     #             hml_mode="train", fixed_len=0, pred_len=0,

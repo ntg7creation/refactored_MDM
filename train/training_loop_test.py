@@ -275,7 +275,21 @@ class TrainLoop:
                     if self.args.use_ema:
                         self.model_avg.train()
 
-                    # Short-circuit for integration testing
+                    # 🧮 Print dataset sample counts only when load_mode == "dual"
+                    ds = getattr(self.data, "dataset", None)
+                    if ds is not None:
+                        # Handle wrapped dataset (e.g., GigaHandsML3D → GigaHandsT2M)
+                        if hasattr(ds, "t2m_dataset"):
+                            ds = ds.t2m_dataset
+
+                        if getattr(ds, "load_mode", None) == "dual":
+                            if hasattr(ds, "countp005") and hasattr(ds, "countp042"):
+                                print(f"\n📊 [Dual Mode] Dataset counts summary (step {self.total_step()}):")
+                                print(f"   p005 count: {ds.countp005}")
+                                print(f"   p042 count: {ds.countp042}")
+                            else:
+                                print("\n⚠️ [Dual Mode] countp005 / countp042 not found in dataset.")
+                                    # Short-circuit for integration testing
                     if os.environ.get("DIFFUSION_TRAINING_TEST", "") and self.total_step() > 0:
                         return
 

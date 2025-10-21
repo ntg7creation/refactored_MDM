@@ -69,7 +69,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='daul'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='dual'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨
@@ -95,6 +95,8 @@ class GigaHandsT2M(Dataset):
         self.dmvb_size = dmvb_size
         self.max_text_len = 40
         self.dmvb_layout = dmvb_layout
+        self.countp005 = 0
+        self.countp042 = 0
         # self.w_vectorizer = WordVectorizer(encoder_type='bert')
        
 
@@ -169,12 +171,12 @@ class GigaHandsT2M(Dataset):
             fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
             fixed_seq = "018"
             label_text = "SLAM THE CAN"
-            print("Using LEFT hand motion for text sum", text_sum)
+            self.countp005 += 1
         else:
             fixed_scene = "p042-massage"
             fixed_seq = "001"
             label_text = "massage your hands"
-            print("Using RIGHT hand motion for text sum", text_sum)
+            self.countp042 += 1
         motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, f"xyz_{self.side}.npy")
         motion = np.load(motion_path).astype(np.float32)
         return motion, label_text
@@ -185,10 +187,13 @@ class GigaHandsT2M(Dataset):
 
         if self.load_mode == 'identity':
             motion, text = self._load_identity(idx)
+            # print("Loaded IDENTITY motion for sample", idx)
         elif self.load_mode == 'dual':
             motion, text = self._load_dual_identity(idx)
+            # print("Loaded DUAL IDENTITY motion for sample", idx)
         else:  # default
             motion, text = self._load_default(idx)
+            # print("Loaded DEFAULT motion for sample", idx)
 
 
         # Normalize
@@ -314,7 +319,8 @@ class GigaHandsML3D(Dataset):
 
     def __len__(self):
         return len(self.t2m_dataset)
-
+    def printconend(self):
+        print( "test conend print" )
 
 
 
@@ -335,6 +341,7 @@ if __name__ == '__main__':
         side=args.side,
         split=args.split
     )
+
 
     print(f"Loaded {len(dataset)} samples")
     for i in range(min(3, len(dataset))):

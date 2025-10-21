@@ -164,7 +164,6 @@ def main():
 
   
 
-    config = dataset_interface.get_config()
 
     # Merge CLI args and config, CLI overrides config if value is not None
     merged_args = config.copy()

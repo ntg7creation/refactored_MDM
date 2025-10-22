@@ -65,8 +65,8 @@ def create_model_and_diffusion(args, data=None):
 # === CONFIG ===
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_dual_concat_dual_10_20_mistake/model000020000.pt",
-    output_dir="save/test_dual_concat_dual_10_20_mistake/infer_test",
+    model_path="save/test_dual_concat_dual_10_20/model000040000.pt",
+    output_dir="save/test_dual_concat_dual_10_20/infer_test",
     # text_prompt="hiting the wall very hard like a boxer",
     text_prompt="p042-massage",
     num_repetitions=1,
@@ -151,7 +151,7 @@ def main(args=ARGS):
 
     # print("[DEBUG] model_kwargs keys:", model_kwargs['y'].keys())
     model_kwargs['y']['text_embed'] = model.encode_text(model_kwargs['y']['text'])
-    model_kwargs['y']['uncond'] = False  # disables conditioning entirely
+    model_kwargs['y']['uncond'] = False  # disables conditioning entirely if true
 
     if args.context_len == 0:
         model_kwargs['y']['prefix'] = torch.zeros(

@@ -69,7 +69,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='dual'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='default'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨

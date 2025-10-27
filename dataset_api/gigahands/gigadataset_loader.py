@@ -69,7 +69,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='default'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='small_real'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨
@@ -181,6 +181,44 @@ class GigaHandsT2M(Dataset):
         motion = np.load(motion_path).astype(np.float32)
         return motion, label_text
 
+    def _load_small_real(self, idx):
+        """
+        Load one of 10 fixed (scene, sequence) motions with their true text labels.
+        Uses preloaded self.samples from _load_annotations().
+        """
+        FIXED_SAMPLES = [
+            ("p005-sandwich-salad-baking-monoply-boxing", "018"),
+            ("p004-mindmap", "006"),
+            ("p003-packing", "034"),
+            ("p008-boxing", "007"),
+            ("p009-tool", "002"),
+            ("p010-fastfood", "004"),
+            ("p021-monopoly", "007"),
+            ("p031-sewing", "005"),
+            ("p042-baking", "001"),
+            ("p046-cleaning-tool", "003"),
+        ]
+
+        scene, seq = FIXED_SAMPLES[idx % len(FIXED_SAMPLES)]
+        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, f"xyz_{self.side}.npy")
+
+        # Find the text from self.samples (populated by _load_annotations)
+        label_text = None
+        for sample_path, text in self.samples:
+            if scene in sample_path and f"keypoints_3d{os.sep}{seq}" in sample_path:
+                label_text = text
+                break
+
+        if label_text is None:
+            raise ValueError(f"Could not find text for {scene}/{seq}")
+
+        if not os.path.exists(motion_path):
+            raise FileNotFoundError(f"Motion not found: {motion_path}")
+
+        motion = np.load(motion_path).astype(np.float32)
+        return motion, label_text
+
+
 
 
     def __getitem__(self, idx):
@@ -191,6 +229,9 @@ class GigaHandsT2M(Dataset):
         elif self.load_mode == 'dual':
             motion, text = self._load_dual_identity(idx)
             # print("Loaded DUAL IDENTITY motion for sample", idx)
+        elif self.load_mode == 'small_real':
+            motion, text = self._load_small_real(idx)
+            # print("Loaded SMALL REAL motion for sample", idx)
         else:  # default
             motion, text = self._load_default(idx)
             # print("Loaded DEFAULT motion for sample", idx)

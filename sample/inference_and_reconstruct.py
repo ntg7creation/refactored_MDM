@@ -22,9 +22,9 @@ from utils.model_util import create_gaussian_diffusion
 # =====================
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_dual_concat_dual_10_20/model000040000.pt",
-    output_dir="save/test_dual_concat_dual_10_20/infer_test",
-    text_prompt="SLAM THE CAN",   # <- your input text, will also be used as filename
+    model_path="save/test_diez_concat_10_27/model000005000.pt",
+    output_dir="save/test_diez_concat_10_27/infer_test",
+    text_prompt="Seize the glass wiper using your dominant hand to get ready for cleaning the glass surface.",   # <- your input text, will also be used as filename
     num_repetitions=1,
     absolote_frame_connt=253,
     motion_length=5,

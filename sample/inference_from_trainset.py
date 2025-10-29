@@ -1,9 +1,15 @@
 import os
+import re
 import json
 import numpy as np
 import torch
-from types import SimpleNamespace
 from tqdm import tqdm
+from types import SimpleNamespace
+import sys
+
+# Ensure access to local modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from utils.fixseed import fixseed
 from utils.model_util import load_saved_model, create_gaussian_diffusion
 from utils import dist_util
@@ -17,9 +23,9 @@ from model.mdm import MDM
 # ==========================================================
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_diez_concat_10_27/model000005000.pt",
-    train_jsonl="gigahands_train_diez.jsonl",
-    output_dir="save/test_diez_concat_10_27/infer_trainset",
+    model_path="save/test_diez_concat_10_27/model000040000.pt",
+    train_jsonl="GigaHands_Data/gigahands_blind_diez.jsonl",
+    output_dir="save/test_diez_concat_10_27/infer_trainset_blind",
     device=0,
     use_ema=True,
     guidance_param=2.5,
@@ -92,19 +98,37 @@ def create_model_and_diffusion(args, data=None):
 
 
 # ==========================================================
+# 🧹 Safe filename utilities
+# ==========================================================
+def sanitize_filename(s: str, max_length: int = 100) -> str:
+    """Removes commas, bad chars, and trailing dots from text."""
+    s = s.replace(",", "")
+    s = re.sub(r'[^a-zA-Z0-9_\- ]+', '_', s)
+    s = s.strip(" .")  # remove trailing space/dot
+    s = "_".join(s.split())  # collapse spaces
+    if len(s) > max_length:
+        s = s[:max_length].rstrip("_")
+    return s
+
+
+def make_safe_name(index: int, scene: str, seq: str, key: str, text: str) -> str:
+    scene = sanitize_filename(scene)
+    seq = sanitize_filename(seq)
+    text = sanitize_filename(text)
+    return f"{index:02d}_{scene}_{seq}_{key}_{text}"
+
+
+# ==========================================================
 # 💾 JSONL reconstruction utility
 # ==========================================================
 def reconstruct_jsonl(motion, output_path):
-    n_joints = motion.shape[1]
-    n_coords = motion.shape[2]
-    n_frames = motion.shape[3]
-
+    n_joints, n_coords, n_frames = motion.shape[1], motion.shape[2], motion.shape[3]
     with open(output_path, "w") as fout:
-        for frame_idx in range(n_frames):
-            keypoints = []
-            for joint in range(n_joints):
-                x, y, z = motion[0, joint, :, frame_idx]
-                keypoints.append([float(x), float(y), float(z), 1.0])
+        for f_idx in range(n_frames):
+            keypoints = [
+                [float(motion[0, j, 0, f_idx]), float(motion[0, j, 1, f_idx]), float(motion[0, j, 2, f_idx]), 1.0]
+                for j in range(n_joints)
+            ]
             fout.write(json.dumps(keypoints) + "\n")
     print(f"✅ Saved {n_frames} frames to {output_path}")
 
@@ -133,23 +157,26 @@ def main(args=ARGS):
     mean = mean.reshape(1, 42, 3, 1)
     std = std.reshape(1, 42, 3, 1)
 
-    # --- Load training jsonl
-    with open(args.train_jsonl, "r") as f:
+    # --- Load training JSONL
+    with open(args.train_jsonl, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    print(f"📄 Loaded {len(lines)} entries from {args.train_jsonl}")
+    print(f"📄 Loaded {len(lines)} annotations from {args.train_jsonl}")
 
-    # --- Generate motion for each text_1 and text_2
+    file_names = []
+
+    # --- Generate motion for each line (limit for testing: remove [:20] to run full)
     for i, line in enumerate(tqdm(lines[:20], desc="Generating")):
         ann = json.loads(line)
         scene = ann.get("scene", f"scene_{i:02d}")
         seq = ann.get("sequence", f"{i:03d}")
 
         for text_key in ["text_1", "text_2"]:
-            if text_key not in ann or not ann[text_key]:
+            if text_key not in ann or not ann[text_key].strip():
                 continue
 
-            text_prompt = ann[text_key]
+            text_prompt = ann[text_key].strip()
 
+            # --- build model kwargs
             model_kwargs = {
                 'y': {
                     'text': [text_prompt],
@@ -160,28 +187,51 @@ def main(args=ARGS):
             }
             model_kwargs['y']['text_embed'] = model.encode_text(model_kwargs['y']['text'])
             model_kwargs['y']['uncond'] = False
-
             if args.context_len == 0:
                 model_kwargs['y']['prefix'] = torch.zeros((1, 42, 3, 0), device=dist_util.dev())
                 model_kwargs['y']['mask'] = torch.zeros((1, 1, 1, 0), device=dist_util.dev())
 
+            # --- diffusion sample
             shape = (1, 42, 3, args.absolote_frame_connt)
             sample = diffusion.p_sample_loop(model, shape, clip_denoised=False,
                                              model_kwargs=model_kwargs, progress=False)
             motion = sample.detach().cpu().numpy()
             motion = motion * std + mean
 
-            safe_text = text_prompt[:80].replace(" ", "_").replace("/", "_")
-            safe_name = f"{i:02d}_{scene}_{seq}_{text_key}_{safe_text}"
+            # --- create safe filename
+            safe_name = make_safe_name(i, scene, seq, text_key, text_prompt)
             json_path = os.path.join(args.output_dir, f"{safe_name}.json")
             jsonl_path = os.path.join(args.output_dir, f"{safe_name}.jsonl")
 
-            output_data = {"motion": motion.tolist(), "text": text_prompt, "lengths": [args.absolote_frame_connt]}
-            with open(json_path, "w") as f:
+            # --- save both
+            output_data = {
+                "motion": motion.tolist(),
+                "text": text_prompt,
+                "lengths": [args.absolote_frame_connt]
+            }
+            with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(output_data, f)
             reconstruct_jsonl(motion, jsonl_path)
 
-    print(f"✅ All done! Saved motions to {args.output_dir}")
+            file_names.append(os.path.basename(jsonl_path))
+
+    # --- write file list for viewer
+    js_file = os.path.join(args.output_dir, "file_list.js")
+    txt_file = os.path.join(args.output_dir, "filenames.txt")
+
+    with open(js_file, "w", encoding="utf-8") as f:
+        f.write("const FILE_LIST = [\n")
+        for n in file_names:
+            f.write(f'    "{n}",\n')
+        f.write("];\nexport default FILE_LIST;\n")
+
+    with open(txt_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(file_names))
+
+    print(f"✅ Created {len(file_names)} motions.")
+    print(f"📄 JS list saved to: {js_file}")
+    print(f"📄 Text list saved to: {txt_file}")
+    print(f"📁 Output directory: {args.output_dir}")
 
 
 if __name__ == "__main__":

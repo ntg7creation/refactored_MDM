@@ -69,7 +69,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='both', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='small_real'):
+                 num_frames=120, dmvb_size=126, dmvb_layout='full', load_mode='custome'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨
@@ -87,6 +87,7 @@ class GigaHandsT2M(Dataset):
 
 
         assert side in ['left', 'right', 'both']
+        
         self.side = side
         self.root_dir = root_dir
         self.device = device
@@ -97,7 +98,9 @@ class GigaHandsT2M(Dataset):
         self.dmvb_layout = dmvb_layout
         self.countp005 = 0
         self.countp042 = 0
-        # self.w_vectorizer = WordVectorizer(encoder_type='bert')
+
+
+
        
 
 
@@ -128,6 +131,21 @@ class GigaHandsT2M(Dataset):
 
         self.samples = []  # list of (motion_path, text)
         self._load_annotations(annotation_file, split)
+
+        # =====================================================
+        # 🧠 Optional: Load a custom subset list for reference
+        # =====================================================
+        self.script = None
+        if getattr(self, "load_mode", None) == "custome":
+            subset_path = os.path.join(os.path.dirname(annotation_file), "train_custom_100.jsonl")
+            if os.path.exists(subset_path):
+                with open(subset_path, "r", encoding="utf-8") as f:
+                    self.script = [json.loads(line) for line in f if line.strip()]
+                print(f"🟢 Loaded custom training script with {len(self.script)} entries from {subset_path}")
+            else:
+                print(f"⚠️ Custom mode enabled but file not found: {subset_path}")
+
+
 
     def _load_annotations(self, annotation_file, split):
         with open(annotation_file, 'r') as f:
@@ -219,6 +237,33 @@ class GigaHandsT2M(Dataset):
         return motion, label_text
 
 
+    def _load_custom_subset(self, idx):
+        """
+        Load one motion (scene, sequence) from the custom subset file (self.script).
+        Uses the entries preloaded into self.script by the constructor.
+        """
+        if not self.script:
+            raise ValueError("Custom subset not loaded. Make sure self.script is populated with entries from train_custom.jsonl")
+
+        # Get the entry for this index
+        entry = self.script[idx % len(self.script)]
+        scene = entry["scene"]
+        seq = entry["sequence"]
+        text = entry["text"]
+
+        # Build the motion path (consistent with how _load_annotations does it)
+        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, f"xyz_{self.side}.npy")
+
+        if not os.path.exists(motion_path):
+            raise FileNotFoundError(f"Motion not found: {motion_path}")
+
+        # Load the motion
+        motion = np.load(motion_path).astype(np.float32)
+
+        # print(f"🟢 Loaded custom motion: {scene}/{seq} | text='{text[:60]}...'")
+
+        return motion, text
+
 
 
     def __getitem__(self, idx):
@@ -232,6 +277,9 @@ class GigaHandsT2M(Dataset):
         elif self.load_mode == 'small_real':
             motion, text = self._load_small_real(idx)
             # print("Loaded SMALL REAL motion for sample", idx)
+        elif self.load_mode == 'custome':
+            motion, text = self._load_custom_subset(idx)
+            # print("Loaded CUSTOM SUBSET motion for sample", idx)
         else:  # default
             motion, text = self._load_default(idx)
             # print("Loaded DEFAULT motion for sample", idx)

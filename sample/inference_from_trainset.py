@@ -23,9 +23,9 @@ from model.mdm import MDM
 # ==========================================================
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_diez_concat_10_27/model000040000.pt",
-    train_jsonl="GigaHands_Data/gigahands_blind_diez.jsonl",
-    output_dir="save/test_diez_concat_10_27/infer_trainset_blind",
+    model_path="save/test_custom100_concat_10_29/model000045000.pt",
+    train_jsonl="GigaHands_Data/train_custom_100.jsonl",
+    output_dir="save/test_custom100_concat_10_29/infer_trainset_blind",
     device=0,
     use_ema=True,
     guidance_param=2.5,
@@ -170,7 +170,7 @@ def main(args=ARGS):
         scene = ann.get("scene", f"scene_{i:02d}")
         seq = ann.get("sequence", f"{i:03d}")
 
-        for text_key in ["text_1", "text_2"]:
+        for text_key in ["text","text_1", "text_2"]:
             if text_key not in ann or not ann[text_key].strip():
                 continue
 

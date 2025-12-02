@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from types import SimpleNamespace
-import sys
 
+import sys
 # Ensure access to local modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -23,9 +23,9 @@ from model.mdm import MDM
 # ==========================================================
 ARGS = SimpleNamespace(
     dataset="gigahands",
-    model_path="save/test_custom100_concat_10_29/model000045000.pt",
-    train_jsonl="GigaHands_Data/train_custom_100.jsonl",
-    output_dir="save/test_custom100_concat_10_29/infer_trainset_blind",
+    model_path="save/test_custom500_concat_11_4/model000045000.pt",
+    train_jsonl="GigaHands_Data/train_custom_500.jsonl",
+    output_dir="save/test_custom500_concat_11_4/infer_trainset",
     device=0,
     use_ema=True,
     guidance_param=2.5,
@@ -209,24 +209,42 @@ def main(args=ARGS):
                 "text": text_prompt,
                 "lengths": [args.absolote_frame_connt]
             }
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(output_data, f)
+            # with open(json_path, "w", encoding="utf-8") as f:
+            #     json.dump(output_data, f)
             reconstruct_jsonl(motion, jsonl_path)
 
             file_names.append(os.path.basename(jsonl_path))
 
-    # --- write file list for viewer
-    js_file = os.path.join(args.output_dir, "file_list.js")
-    txt_file = os.path.join(args.output_dir, "filenames.txt")
+        # --- write file list for viewer (with motion metadata)
+        js_file = os.path.join(args.output_dir, "file_list.js")
+        txt_file = os.path.join(args.output_dir, "filenames.txt")
 
-    with open(js_file, "w", encoding="utf-8") as f:
-        f.write("const FILE_LIST = [\n")
+        # Build structured file list with scene/sequence info
+        file_objects = []
         for n in file_names:
-            f.write(f'    "{n}",\n')
-        f.write("];\nexport default FILE_LIST;\n")
+            # Extract scene and seq from filename, e.g. "03_p047-gopro-present_072_text_..."
+            match = re.match(r"\d+_(p\d+-[^_]+)_(\d+)_", n)
+            if match:
+                scene_name, seq_num = match.groups()
+            else:
+                scene_name, seq_num = "unknown_scene", "unknown_seq"
 
-    with open(txt_file, "w", encoding="utf-8") as f:
-        f.write("\n".join(file_names))
+            file_objects.append({
+                "filename": n,
+                "scene": scene_name,
+                "sequence": seq_num
+            })
+
+        # Save as JS object list
+        with open(js_file, "w", encoding="utf-8") as f:
+            f.write("const FILE_LIST = ")
+            json.dump(file_objects, f, indent=4)
+            f.write(";\nexport default FILE_LIST;\n")
+
+        # Also save plain filenames for convenience
+        with open(txt_file, "w", encoding="utf-8") as f:
+            f.write("\n".join([obj["filename"] for obj in file_objects]))
+
 
     print(f"✅ Created {len(file_names)} motions.")
     print(f"📄 JS list saved to: {js_file}")

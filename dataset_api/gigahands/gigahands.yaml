@@ -58,7 +58,7 @@ noise_schedule: cosine
 diffusion_steps: 50
 sigma_small: True
 
-save_dir: save/test_custom100_concat_10_29
+save_dir: save/test_custom500_concat_11_4
 #test_dual_concat_identity - need to test if this works
 overwrite: False
 lr: 0.0001

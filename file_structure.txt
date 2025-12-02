@@ -3,15 +3,14 @@
 ├── DiP.md
 ├── GigaHands_Data/
 │   ├── annotations_v2.jsonl
+│   ├── gigahands_blind_diez.jsonl
+│   ├── gigahands_train_diez.jsonl
+│   ├── train_custom_100_dmg.jsonl
+│   ├── train_custom_40.jsonl
+│   └── train_custom_500.jsonl
 ├── LICENSE
 ├── README.md
 ├── cog.yaml
-├── compute_asl_mean_std.py
-├── compute_mean_std_2Hands.py
-├── compute_normalization.py
-├── convert_gigahands_to_mdm.py
-├── convert_gigahands_to_mdm_2Hands.py
-├── convert_jsonl_to_dmvb_npy.py
 ├── data_loaders/
 │   ├── a2m/
 │   │   ├── dataset.py
@@ -46,11 +45,14 @@
 │   ├── humanml_utils.py
 │   └── tensors.py
 ├── dataset_api/
+│   ├── ASL/
+│   │   ├── ASL_loader.py
+│   │   ├── asl.yaml
+│   │   └── asl_interface.py
 │   ├── dataset_interface.py
 │   ├── dataset_registry.py
 │   └── gigahands/
-│       ├── asl.yaml
-│       ├── asl_interface.py
+│       ├── gigadataset_loader.py
 │       ├── gigahands.yaml
 │       └── gigahands_interface.py
 ├── diffusion/
@@ -75,6 +77,7 @@
 │           └── stgcnutils/
 │               └── graph.py
 ├── extract_gloss_video_ids.py
+├── file_list.js
 ├── file_structure.txt
 ├── list_structure.py
 ├── model/
@@ -85,11 +88,15 @@
 │   ├── rotation2xyz.py
 │   └── smpl.py
 ├── pytest.ini
+├── requirements-pip.txt
 ├── sample/
 │   ├── compare_loss.py
 │   ├── compare_loss_dmvb.py
 │   ├── denoise_test.py
 │   ├── generate.py
+│   ├── inference_and_reconstruct.py
+│   ├── inference_from_rewritten_texts.py
+│   ├── inference_from_trainset.py
 │   ├── inference_lite.py
 │   ├── inference_lite_ASL.py
 │   ├── old/
@@ -97,6 +104,27 @@
 │   │   └── inference_test.py
 │   ├── reconstruct_inference.py
 │   └── reconstruct_inference_asl.py
+├── scripts/
+│   ├── Motion_to_Image.ipynb
+│   ├── annotations_v2.jsonl
+│   ├── clarify_annotion_analysis.ipynb
+│   ├── compute_asl_mean_std.py
+│   ├── compute_mean_std_2Hands.py
+│   ├── compute_normalization.py
+│   ├── convert_gigahands_to_mdm.py
+│   ├── convert_gigahands_to_mdm_2Hands.py
+│   ├── convert_jsonl_to_dmvb_npy.py
+│   ├── create_train_subset.py
+│   ├── distance_graphs_motionSpace.ipynb
+│   ├── distance_graphs_wordSpace.ipynb
+│   ├── find_closest_motions.py
+│   ├── generate_file_list.py
+│   ├── make_gigahands_train_diez.py
+│   ├── plot_closest_motions.ipynb
+│   ├── plot_closest_motions.py
+│   ├── sanity_check.py
+│   └── testingscript.py
+├── test.jsonl
 ├── tests/
 │   └── test_gigahands_loader.py
 ├── train/

@@ -1,0 +1,71 @@
+{"scene": "p005-sandwich-salad-baking-monoply-boxing",
+"sequence": "014", 
+"start_frame_id": 0, 
+"end_frame_id": -1, 
+"clarify_annotation": "Grasp the can of spam on the table near the knife holder", 
+"description": "Grasp the can of spam on the table", 
+"rewritten_annotation": 
+["Seize the can of spam on the table beside the knife holder."
+, "Take hold of the can of spam on the table next to the knife holder.",
+ "Clutch the can of spam on the table adjacent to the knife holder.",
+ "Snatch the can of spam from the table by the knife holder.", 
+ "Grab the can of spam on the table near the knife rack."], 
+ "all_tokens":
+  ["grasp/VERB the/DET can/NOUN of/ADP spam/NOUN on/ADP the/DET table/NOUN near/ADP the/DET knife/NOUN holder/NOUN", "seize/VERB the/DET can/NOUN of/ADP spam/NOUN on/ADP the/DET table/NOUN beside/ADP the/DET knife/NOUN holder/NOUN", "take/VERB hold/NOUN of/ADP the/DET can/NOUN of/ADP spam/NOUN on/ADP the/DET table/NOUN next/ADV to/ADP the/DET knife/NOUN holder/NOUN", "clutch/VERB the/DET can/NOUN of/ADP spam/NOUN on/ADP the/DET table/NOUN adjacent/ADJ to/ADP the/DET knife/NOUN holder/NOUN", "snatch/VERB the/DET can/NOUN of/ADP spam/NOUN from/ADP the/DET table/NOUN by/ADP the/DET knife/NOUN holder/NOUN", "grab/VERB the/DET can/NOUN of/ADP spam/NOUN on/ADP the/DET table/NOUN near/ADP the/DET knife/NOUN rack/NOUN"]}
+
+  {"scene": "p005-gopro",
+   "sequence": "009",
+   "start_frame_id": 0,
+   "end_frame_id": -1,
+   "clarify_annotation": "Capture the tree marker by pressing the capture button on the GoPro",
+   "description": "Capture the tree marker by pressing the capture button",
+   "rewritten_annotation": ["Press the capture button on the GoPro to seize the tree marker.",
+   "Hit the capture button on the GoPro to photograph the tree marker.",
+   "Use the GoPro's capture button to snap the tree marker.",
+   "Activate the capture button on the GoPro to record the tree marker.",
+   "Engage the GoPro's capture button to capture the tree marker."],
+   "all_tokens": ["capture/VERB the/DET tree/NOUN marker/NOUN by/ADP press/VERB the/DET capture/NOUN button/NOUN on/ADP the/DET GoPro/PROPN",
+   "press/VERB the/DET capture/NOUN button/NOUN on/ADP the/DET GoPro/PROPN to/PART seize/VERB the/DET tree/NOUN marker/NOUN",
+   "hit/VERB the/DET capture/NOUN button/NOUN on/ADP the/DET GoPro/PROPN to/PART photograph/VERB the/DET tree/NOUN marker/NOUN",
+   "use/VERB the/DET GoPro/PROPN capture/NOUN button/NOUN to/PART snap/VERB the/DET tree/NOUN marker/NOUN",
+   "activate/VERB the/DET capture/NOUN button/NOUN on/ADP the/DET GoPro/PROPN to/PART record/VERB the/DET tree/NOUN marker/NOUN",
+   "engage/VERB the/DET GoPro/PROPN capture/NOUN button/NOUN to/PART capture/VERB the/DET tree/NOUN marker/NOUN"]}
+
+
+
+{"scene": "p026-noodle",
+ "sequence": "012",
+ "start_frame_id": 0,
+ "end_frame_id": 106,
+ "clarify_annotation": "Dispose of the used tissue in the trash can",
+ "description": "Throw away the used tissue into the trash can",
+ "rewritten_annotation": ["Throw the used tissue in the trash can.",
+ "Discard the used tissue in the trash can.",
+ "Place the used tissue in the trash can.",
+ "Drop the used tissue in the trash can.",
+ "Toss the used tissue in the trash can."],
+ "all_tokens": ["Dispose/ADJ of/ADP the/DET use/VERB tissue/NOUN in/ADP the/DET trash/NOUN can/AUX",
+ "throw/VERB the/DET use/VERB tissue/NOUN in/ADP the/DET trash/NOUN can/AUX",
+ "Discard/PROPN the/DET use/VERB tissue/NOUN in/ADP the/DET trash/NOUN can/AUX",
+ "place/VERB the/DET use/VERB tissue/NOUN in/ADP the/DET trash/NOUN can/AUX",
+ "drop/VERB the/DET use/VERB tissue/NOUN in/ADP the/DET trash/NOUN can/AUX",
+ "toss/VERB the/DET used/ADJ tissue/NOUN in/ADP the/DET trash/NOUN can/AUX"]}
+
+
+ {"scene": "p014-tool",
+  "sequence": "008",
+  "start_frame_id": 0,
+  "end_frame_id": -1,
+  "clarify_annotation": "Hang the wrench on the hook located on the wall or tool board",
+  "description": "Hang the wrench on the hook",
+  "rewritten_annotation": ["Suspend the wrench from the hook mounted on the wall or tool board.",
+  "Place the wrench on the hook that is attached to the wall or tool board.",
+  "Affix the wrench onto the hook positioned on the wall or tool board.",
+  "Fasten the wrench to the hook situated on the wall or tool board.",
+  "Secure the wrench onto the hook installed on the wall or tool board."],
+  "all_tokens": ["hang/VERB the/DET wrench/NOUN on/ADP the/DET hook/NOUN locate/VERB on/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN",
+  "suspend/VERB the/DET wrench/NOUN from/ADP the/DET hook/NOUN mount/VERB on/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN",
+  "place/VERB the/DET wrench/NOUN on/ADP the/DET hook/NOUN that/PRON is/AUX attach/VERB to/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN",
+  "affix/VERB the/DET wrench/NOUN onto/ADP the/DET hook/NOUN position/VERB on/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN",
+  "fasten/VERB the/DET wrench/NOUN to/ADP the/DET hook/NOUN situate/VERB on/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN",
+  "secure/VERB the/DET wrench/NOUN onto/ADP the/DET hook/NOUN instal/VERB on/ADP the/DET wall/NOUN or/CCONJ tool/NOUN board/NOUN"]}

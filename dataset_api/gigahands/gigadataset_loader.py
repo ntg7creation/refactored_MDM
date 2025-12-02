@@ -22,30 +22,6 @@ def build_dmvb(raw_motion: np.ndarray, layout_type: str = "full") -> np.ndarray:
     if True: #layout_type == "full":
         return raw_motion
 
-    # elif False:#layout_type == "root+5":
-    #     joint_indices = [0, 1, 5, 9, 13, 17]  # root + base of each finger
-    #     d_per_joint = 3
-    #     frame_dim = raw_motion.shape[1]
-    #     T = raw_motion.shape[0]
-
-    #     if frame_dim < 63:
-    #         raise ValueError("Expected raw_motion to have at least 21 joints (63 dims)")
-
-    #     joint_data = [raw_motion[:, j * d_per_joint : (j + 1) * d_per_joint] for j in joint_indices]
-    #     # print(f"[build_dmvb] Selected joints indices: {joint_indices}, each with {d_per_joint} dims, total frame_dim={frame_dim}")
-    #     return np.concatenate(joint_data, axis=1)
-
-    # elif layout_type == "2d_only":
-    #     raise NotImplementedError("DMVB layout '2d_only' is not implemented yet.")
-
-    # elif layout_type == "velocity_only":
-    #     raise NotImplementedError("DMVB layout 'velocity_only' is not implemented yet.")
-
-    # elif layout_type == "flattened_xyz+vel":
-    #     raise NotImplementedError("DMVB layout 'flattened_xyz+vel' is not implemented yet.")
-
-    # else:
-    #     raise NotImplementedError(f"DMVB layout '{layout_type}' is not implemented.")
     
 
 
@@ -137,7 +113,7 @@ class GigaHandsT2M(Dataset):
         # =====================================================
         self.script = None
         if getattr(self, "load_mode", None) == "custome":
-            subset_path = os.path.join(os.path.dirname(annotation_file), "train_custom_100.jsonl")
+            subset_path = os.path.join(os.path.dirname(annotation_file), "train_custom_500.jsonl")
             if os.path.exists(subset_path):
                 with open(subset_path, "r", encoding="utf-8") as f:
                     self.script = [json.loads(line) for line in f if line.strip()]

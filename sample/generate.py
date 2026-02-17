@@ -18,6 +18,7 @@ from data_loaders.humanml.utils.plot_script import plot_3d_motion
 import shutil
 from data_loaders.tensors import collate
 from moviepy.editor import clips_array
+from mdm_globals import DMVB_DIM
 # Also save as JSON for use in JavaScript
 import json
 
@@ -160,7 +161,7 @@ def main(args=None):
 
         # Recover XYZ *positions* from HumanML3D vector representation
         if model.data_rep == 'hml_vec':
-            n_joints = 22 if sample.shape[1] == 126 else 21
+            n_joints = 22 if sample.shape[1] == DMVB_DIM else 21
             sample = data.dataset.t2m_dataset.inv_transform(sample.cpu().permute(0, 2, 3, 1)).float()
             sample = recover_from_ric(sample, n_joints)
             sample = sample.view(-1, *sample.shape[2:]).permute(0, 2, 3, 1)

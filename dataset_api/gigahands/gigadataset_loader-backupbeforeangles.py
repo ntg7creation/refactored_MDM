@@ -7,8 +7,7 @@ from torch.utils.data import Dataset
 from tqdm import tqdm
 from data_loaders.humanml.utils.word_vectorizer import WordVectorizer
 from LOG.logger import LOG
-from mdm_globals import     DMVB_DIM, DATA_ROOT, NORM_STATS,MEAN_PATH,STD_PATH,FILE_NAME, ANNOTATIONS_PATH,SINGLE_ANNOTATION_INDEX, SINGLE_TEXT_SOURCE
-    
+from mdm_globals import DMVB_DIM, DATA_ROOT, NORM_STATS, ANNOTATIONS_PATH
 
 def text_to_sum(s: str) -> int:
     """Convert text to numeric sum (a=1, ..., z=26)."""
@@ -24,8 +23,7 @@ def build_dmvb(raw_motion: np.ndarray, layout_type: str = "full") -> np.ndarray:
     if True: #layout_type == "full":
         return raw_motion
 
-
-
+    
 
 
 
@@ -47,15 +45,15 @@ class GigaHandsT2M(Dataset):
     This class is intended to be used internally by a wrapper that conforms to MDM's dataset expectations.
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
-                 motion_file_name='tpr_both.npy', split='train', device='cpu',
-                 num_frames=120, dmvb_size=DMVB_DIM, dmvb_layout='full', load_mode='single'):
+                 side='both', split='train', device='cpu',
+                 num_frames=120, dmvb_size=DMVB_DIM, dmvb_layout='full', load_mode='custome'):
         
         self.load_mode = load_mode
                 # 🚨 BIG DEBUG BANNER 🚨
         print("\n" + "="*80)
         print(f"🚨 INIT GigaHandsT2M DATASET 🚨")
         print(f" Split: {split}")
-        print(f" Motion_file_name: {motion_file_name}")
+        print(f" Side: {side}")
         print(f" Root dir: {root_dir}")
         print(f" Annotation file: {annotation_file}")
         print(f" Mean/Std dir: {mean_std_dir}")
@@ -65,18 +63,9 @@ class GigaHandsT2M(Dataset):
         print("="*80 + "\n")
 
 
-        VALID_MOTION_FILES = {
-            "xyz_left.npy",
-            "xyz_right.npy",
-            "xyz_both.npy",
-            "xyz_both_vel.npy",
-            "angles_both.npy",
-            "tpr_both.npy",
-        }
-
-        assert motion_file_name in VALID_MOTION_FILES, f"Invalid motion_file: {motion_file_name}"
-        self.motion_file = motion_file_name
-
+        assert side in ['left', 'right', 'both', 'both_vel'], f"Invalid side: {side}"
+        
+        self.side = side
         self.root_dir = root_dir
         self.device = device
         self.num_frames = num_frames
@@ -84,30 +73,16 @@ class GigaHandsT2M(Dataset):
         self.dmvb_size = dmvb_size
         self.max_text_len = 40
         self.dmvb_layout = dmvb_layout
-        self.annotation_file = annotation_file
-
         self.countp005 = 0
         self.countp042 = 0
 
 
-        # suffix = None
-        # if self.motion_file == "angles_both.npy":
-        #     suffix = "angles"
-        # elif self.motion_file == "xyz_both_vel.npy":
-        #     suffix = "both_vel"
-        # elif self.motion_file == "xyz_both.npy":
-        #     suffix = "both"
-        # elif self.motion_file == "xyz_left.npy":
-        #     suffix = "left"
-        # elif self.motion_file == "xyz_right.npy":
-        #     suffix = "right"
-        # elif self.motion_file == "tpr_both.npy":
-        #     suffix = "tpr_both"
-        # else:
-        #     raise ValueError(self.motion_file)
-        
-        self.mean = np.load(MEAN_PATH).astype(np.float32)
-        self.std  = np.load(STD_PATH).astype(np.float32)
+
+       
+
+
+        self.mean = np.load(pjoin(mean_std_dir, f'mean_{side}.npy'))
+        self.std = np.load(pjoin(mean_std_dir, f'std_{side}.npy'))
 
         
         # Derive trimmed stats using layout
@@ -127,16 +102,12 @@ class GigaHandsT2M(Dataset):
         else:
             dev = torch.device("cpu")
 
-        # self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
-        # self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
 
 
         self.samples = []  # list of (motion_path, text)
         self._load_annotations(annotation_file, split)
-
-        if self.load_mode == "single":
-            self._single_motion, self._single_text = self._load_single_from_annotation_index()
-
 
         # =====================================================
         # 🧠 Optional: Load a custom subset list for reference
@@ -162,7 +133,7 @@ class GigaHandsT2M(Dataset):
             scene = ann['scene']
             seq = ann['sequence']
             text_list = ann['rewritten_annotation']
-            motion_path = pjoin(self.root_dir, scene, 'keypoints_3d', seq, self.motion_file)
+            motion_path = pjoin(self.root_dir, scene, 'keypoints_3d', seq, f'xyz_{self.side}.npy')
 
             if os.path.exists(motion_path):
                 for text in text_list:
@@ -182,43 +153,10 @@ class GigaHandsT2M(Dataset):
     def _load_identity(self, idx):
         fixed_scene = "p005-sandwich-salad-baking-monoply-boxing"
         fixed_seq = "018"
-        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, self.motion_file)
+        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, "xyz_both.npy")
         _, text = self.samples[idx]  # keep original text
         motion = np.load(motion_path).astype(np.float32)
         return motion, text
-
-    def _load_single_from_annotation_index(self):
-        # read only the one line we need (no readlines)
-        with open(self.annotation_file, "r", encoding="utf-8") as f:
-            for i, line in enumerate(f):
-                if i == SINGLE_ANNOTATION_INDEX:
-                    ann = json.loads(line)
-                    break
-            else:
-                raise IndexError(f"SINGLE_ANNOTATION_INDEX {SINGLE_ANNOTATION_INDEX} out of range")
-
-        scene = ann["scene"]
-        seq = ann["sequence"]
-
-        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, self.motion_file)
-        if not os.path.exists(motion_path):
-            raise FileNotFoundError(f"Motion not found: {motion_path}")
-
-        # choose text (no idx)
-        if SINGLE_TEXT_SOURCE == "description":
-            text = ann.get("description", "")
-        elif SINGLE_TEXT_SOURCE == "clarify_annotation":
-            text = ann.get("clarify_annotation", "")
-        else:
-            ra = ann.get("rewritten_annotation", [])
-            text = ra[0] if isinstance(ra, list) and ra else ""
-
-        motion = np.load(motion_path).astype(np.float32)
-        return motion, text
-
-
-
-
 
     def _load_dual_identity(self, idx):
         _, text = self.samples[idx]
@@ -234,8 +172,7 @@ class GigaHandsT2M(Dataset):
             fixed_seq = "001"
             label_text = "massage your hands"
             self.countp042 += 1
-        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq,self.motion_file
-)
+        motion_path = pjoin(self.root_dir, fixed_scene, "keypoints_3d", fixed_seq, f"xyz_{self.side}.npy")
         motion = np.load(motion_path).astype(np.float32)
         return motion, label_text
 
@@ -258,8 +195,7 @@ class GigaHandsT2M(Dataset):
         ]
 
         scene, seq = FIXED_SAMPLES[idx % len(FIXED_SAMPLES)]
-        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, self.motion_file
-)
+        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, f"xyz_{self.side}.npy")
 
         # Find the text from self.samples (populated by _load_annotations)
         label_text = None
@@ -293,8 +229,7 @@ class GigaHandsT2M(Dataset):
         text = entry["text"]
 
         # Build the motion path (consistent with how _load_annotations does it)
-        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, self.motion_file
-)
+        motion_path = pjoin(self.root_dir, scene, "keypoints_3d", seq, f"xyz_{self.side}.npy")
 
         if not os.path.exists(motion_path):
             raise FileNotFoundError(f"Motion not found: {motion_path}")
@@ -322,9 +257,6 @@ class GigaHandsT2M(Dataset):
         elif self.load_mode == 'custome':
             motion, text = self._load_custom_subset(idx)
             # print("Loaded CUSTOM SUBSET motion for sample", idx)
-        elif self.load_mode == "single":
-            motion = self._single_motion
-            text = self._single_text
         else:  # default
             motion, text = self._load_default(idx)
             # print("Loaded DEFAULT motion for sample", idx)
@@ -396,16 +328,16 @@ class GigaHandsML3D(Dataset):
 
         # Paths (can be overridden via kwargs)
         # DATA_ROOT should point to: D:\repos\refactored_MDM\GigaHands_Data\converted_velocity
-        self.root_dir        =  pjoin(DATA_ROOT)
-        self.annotation_file =  pjoin(ANNOTATIONS_PATH)
-        self.mean_std_dir    =  pjoin(NORM_STATS)
+        self.root_dir        = kwargs.get('root_dir', pjoin(DATA_ROOT))
+        self.annotation_file = kwargs.get('annotation_file', pjoin(ANNOTATIONS_PATH))
+        self.mean_std_dir    = kwargs.get('mean_std_dir', pjoin(NORM_STATS))
 
  
 
 
         self.fixed_len = kwargs.get('fixed_len', 0)
         self.use_cache = kwargs.get('use_cache', True)
-        self.side = kwargs.get('side', 'tpr_both')
+        self.side = kwargs.get('side', 'both_vel')
 
         # Load mean/std
         mean_path = pjoin(self.mean_std_dir, f'mean_{self.side}.npy')
@@ -427,7 +359,7 @@ class GigaHandsML3D(Dataset):
             annotation_file=self.annotation_file,
             mean_std_dir=self.mean_std_dir,
             split=split,
-            motion_file_name=FILE_NAME, #TODO change this to be dynamic
+            side=self.side,
             num_frames=self.fixed_len if self.fixed_len > 0 else 196,
             device=self.device,
             dmvb_size=self.dmvb_size,
@@ -440,8 +372,8 @@ class GigaHandsML3D(Dataset):
         else:
             dev = torch.device("cpu")
 
-        # self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
-        # self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.mean_gpu = torch.tensor(self.mean, dtype=torch.float32, device=dev)[None, :, None, None]
+        self.std_gpu  = torch.tensor(self.std, dtype=torch.float32, device=dev)[None, :, None, None]
 
 
         assert len(self.t2m_dataset) > 0, 'GigaHands dataset appears empty.'
@@ -476,7 +408,7 @@ if __name__ == '__main__':
         root_dir=args.root_dir,
         annotation_file=args.annotation_file,
         mean_std_dir=args.mean_std_dir,
-        motion_file_name=args.side,
+        side=args.side,
         split=args.split
     )
 

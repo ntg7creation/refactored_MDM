@@ -3,7 +3,8 @@ from argparse import Namespace
 import re
 from os.path import join as pjoin
 from data_loaders.humanml.utils.word_vectorizer import POS_enumerator
-
+from LOG.logger import LOG
+from mdm_globals import DMVB_DIM
 
 def is_float(numStr):
     flag = False
@@ -59,7 +60,8 @@ def get_opt(opt_path, device):
         opt.motion_dir = pjoin(opt.data_root, 'new_joint_vecs')
         opt.text_dir = pjoin(opt.data_root, 'texts')
         opt.joints_num = 22
-        opt.dim_pose = 126
+        # LOG.log("[get_opt] Setting opt.dim_pose for t2m dataset")
+        opt.dim_pose = DMVB_DIM
         opt.max_motion_length = 196
     elif opt.dataset_name == 'kit':
         opt.data_root = './dataset/KIT-ML'

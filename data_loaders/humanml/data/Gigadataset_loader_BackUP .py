@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from data_loaders.humanml.utils.word_vectorizer import WordVectorizer
+from mdm_globals import DMVB_DIM
+
 
 
 def build_dmvb(raw_motion: np.ndarray, layout_type: str = "full") -> np.ndarray:
@@ -60,7 +62,7 @@ class GigaHandsT2M(Dataset):
     """
     def __init__(self, root_dir, annotation_file, mean_std_dir, 
                  side='left', split='train', device='cpu',
-                 num_frames=120, dmvb_size=126, dmvb_layout='full'):
+                 num_frames=120, dmvb_size=DMVB_DIM, dmvb_layout='full'):
         assert side in ['left', 'right']
         self.side = side
         self.root_dir = root_dir
@@ -182,7 +184,7 @@ class GigaHandsT2M(Dataset):
 
 
 class GigaHandsML3D(Dataset):
-    def __init__(self, mode, datapath=None, split="train", dmvb_size=126, **kwargs):
+    def __init__(self, mode, datapath=None, split="train", dmvb_size=DMVB_DIM, **kwargs):
         self.mode = mode
         self.dataset_name = 'gigahands'
         self.dataname = 'gigahands'

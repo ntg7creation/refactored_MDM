@@ -95,6 +95,17 @@ def create_gaussian_diffusion(args):
     else:
         lambda_target_loc = 0.
 
+    print("\n" + "=" * 60)
+    print("🔍 DEBUG: Creating Gaussian / Spaced Diffusion with:")
+    print(f"  lambda_vel         = {args.lambda_vel}")
+    print(f"  lambda_rcxyz       = {args.lambda_rcxyz}")
+    print(f"  lambda_fc          = {args.lambda_fc}")
+    print(f"  lambda_target_loc  = {lambda_target_loc}")
+    print(f"  loss_type          = {loss_type}")
+    print(f"  diffusion_steps    = {steps}")
+    print("=" * 60 + "\n")
+
+
     return SpacedDiffusion(
         use_timesteps=space_timesteps(steps, timestep_respacing),
         betas=betas,

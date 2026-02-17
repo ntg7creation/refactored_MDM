@@ -8,13 +8,19 @@ import json
 import logging
 from utils.fixseed import fixseed
 
+import os, sys
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, ROOT)
+
 # from utils.parser_util import train_args
 from utils import dist_util
-from train.training_loop_test import TrainLoop
+from train.training_loop_2026 import TrainLoop
 from data_loaders.get_data import get_dataset_loader
 from utils.model_util import create_model_and_diffusion
 from train.train_platforms import WandBPlatform, ClearmlPlatform, TensorboardPlatform, NoPlatform
 from dataset_api.dataset_registry import DatasetInterfaceRegistry
+from mdm_globals import DMVB_DIM,SAVE_DIR
+
 
 from types import SimpleNamespace
 
@@ -47,14 +53,14 @@ def main():
 
     # Manually inject runtime-resolved values (not stored in YAML)
     args.dataset = dataset_name
-    args.save_dir = dataset_interface.get_config_value("save_dir")  # Already extracted elsewhere too
+    args.save_dir = SAVE_DIR  # Already extracted elsewhere too
     args.device = dataset_interface.get_config_value("device")
 
     fixseed(args.seed)
 
     # ---------------------------- Save dir and logging ---------------------------- #
     # logging.info(f"🧾 save_dir from args before override: {args.save_dir}")
-    save_dir = dataset_interface.get_config_value("save_dir")
+    save_dir = SAVE_DIR
     if save_dir is None:
         raise FileNotFoundError('save_dir was not specified.')
     elif not os.path.exists(save_dir):
@@ -137,17 +143,6 @@ def main():
         pred_len=pred_len,
         device=device,
     )
-    # logging.info("📦 Creating data loader...")
-    # dataset_interface = DatasetInterfaceRegistry.get(args.dataset)
-
-    # data = dataset_interface.get_loader(
-    #     name=args.dataset,
-    #     batch_size=batch_size,
-    #     num_frames=num_frames,
-    #     fixed_len=pred_len + context_len,
-    #     pred_len=pred_len,
-    #     device=device,
-    # )
 
 
     # ---------------------------- Model Setup ---------------------------- #
@@ -178,21 +173,35 @@ def main():
     my_args.save_dir = save_dir
     my_args.dataset = dataset_name
 
-    # # 🧪 Compare args (CLI) vs. my_args (merged config)
-    # logging.info("🔍 Comparing CLI args vs merged config (my_args):")
+    # 🔧 Enable velocity loss
+    my_args.lambda_vel = 0.0
+    # 🔧 Enable target location prediction loss
+    my_args.lambda_target_loc = 0.0  
 
-    # for key in sorted(vars(my_args)):
-    #     cli_val = getattr(args, key, None)
-    #     merged_val = getattr(my_args, key, None)
+    setattr(my_args, "DMVB_size", DMVB_DIM)
+    setattr(data, "dmvb_size", DMVB_DIM)
 
-    #     if cli_val != merged_val:
-    #         logging.info(f"🔁 {key}: CLI = {cli_val!r} | Used = {merged_val!r}")
-    #     else:
-    #         logging.info(f"✅ {key}: {merged_val!r}")
+    print("\n================================================================")
+    print("🔍 DEBUG: MDM MODEL ARGUMENTS BEFORE CREATION")
+    print("================================================================")
 
-    # print("🔍 my_args:")
-    # for k, v in vars(my_args).items():
-    #     print(f"  {k}: {v}")
+    def pretty(d):
+        for k,v in d.items():
+            print(f"  {k:25} → {v}")
+
+    print("\n📌 my_args (raw):")
+    pretty(vars(my_args))
+
+    print("\n📌 dataset interface reports:")
+    print(f"  dataset_name            → {data.dataset_name if hasattr(data, 'dataset_name') else 'N/A'}")
+    print(f"  dmvb_size               → {getattr(data, 'dmvb_size', 'N/A')}")
+    print(f"  side                    → {getattr(data, 'side', 'N/A')}")
+    print(f"  fixed_len               → {getattr(data, 'fixed_len', 'N/A')}")
+    print(f"  mean/std shapes         → mean={data.mean.shape if hasattr(data,'mean') else 'N/A'} | std={data.std.shape if hasattr(data,'std') else 'N/A'}")
+    print("================================================================")
+    print("🚀 NOW CREATING MODEL (create_model_and_diffusion)")
+    print("================================================================\n")
+
 
     model, diffusion = create_model_and_diffusion(my_args, data)
 

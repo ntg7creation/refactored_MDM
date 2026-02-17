@@ -6,7 +6,7 @@ dataset = GigaHandsT2M(
     root_dir=r"D:\repos\refactored_MDM\GigaHands_Data\coverted_motions\hand_poses_xyz",
     annotation_file=r"D:\repos\refactored_MDM\GigaHands_Data\annotations_v2.jsonl",
     mean_std_dir=r"D:\repos\refactored_MDM\GigaHands_Data\coverted_motions\norm_stats",
-    side='both',
+    motion_file_name='both',
     load_mode='identity',
     num_frames=120
 )

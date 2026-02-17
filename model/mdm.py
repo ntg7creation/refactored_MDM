@@ -276,6 +276,15 @@ class MDM(nn.Module):
         bs, njoints, nfeats, nframes = x.shape
         time_emb = self.embed_timestep(timesteps)  # [1, bs, d]
 
+        if not hasattr(self, "_printed"):
+            print("\n============================= INPUT DEBUG =============================")
+            print("x before Linear (shape):", x.shape)
+            print("expected input_feats:", self.input_feats)
+            print("=====================================================================\n")
+            self._printed = True
+
+
+
         if 'target_cond' in y.keys():
             # NOTE: We don't use CFG for joints - but we do wat to support uncond sampling for generation and eval!
             time_emb += self.mask_cond(self.embed_target_cond(y['target_cond'], y['target_joint_names'], y['is_heading'])[None], force_mask=y.get('target_uncond', False))  # For uncond support and CFG

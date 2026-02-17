@@ -9,6 +9,9 @@
 │   ├── train_custom_40.jsonl
 │   └── train_custom_500.jsonl
 ├── LICENSE
+├── LOG/
+│   ├── __init__.py
+│   └── logger.py
 ├── README.md
 ├── cog.yaml
 ├── data_loaders/
@@ -44,6 +47,7 @@
 │   │       └── word_vectorizer.py
 │   ├── humanml_utils.py
 │   └── tensors.py
+├── data_sample.jsonl
 ├── dataset_api/
 │   ├── ASL/
 │   │   ├── ASL_loader.py
@@ -79,7 +83,18 @@
 ├── extract_gloss_video_ids.py
 ├── file_list.js
 ├── file_structure.txt
+├── inference_system/
+│   ├── analysis.ipynb
+│   ├── config.py
+│   ├── export.py
+│   ├── metrics.py
+│   ├── prompt_sources.py
+│   ├── run_infer.py
+│   ├── run_train_seen.py
+│   ├── run_unseen_text.py
+│   └── sampler.py
 ├── list_structure.py
+├── mdm_globals.py
 ├── model/
 │   ├── BERT/
 │   │   ├── BERT_encoder.py
@@ -90,43 +105,52 @@
 ├── pytest.ini
 ├── requirements-pip.txt
 ├── sample/
-│   ├── compare_loss.py
-│   ├── compare_loss_dmvb.py
-│   ├── denoise_test.py
 │   ├── generate.py
-│   ├── inference_and_reconstruct.py
 │   ├── inference_from_rewritten_texts.py
 │   ├── inference_from_trainset.py
-│   ├── inference_lite.py
-│   ├── inference_lite_ASL.py
-│   ├── old/
-│   │   ├── generate_test.py
-│   │   └── inference_test.py
-│   ├── reconstruct_inference.py
-│   └── reconstruct_inference_asl.py
+│   └── old/
+│       ├── compare_loss.py
+│       ├── compare_loss_dmvb.py
+│       ├── denoise_test.py
+│       ├── generate_test.py
+│       ├── inference_and_reconstruct.py
+│       ├── inference_lite.py
+│       ├── inference_lite_ASL.py
+│       ├── inference_test.py
+│       └── reconstruct_inference.py
 ├── scripts/
 │   ├── Motion_to_Image.ipynb
 │   ├── annotations_v2.jsonl
-│   ├── clarify_annotion_analysis.ipynb
-│   ├── compute_asl_mean_std.py
-│   ├── compute_mean_std_2Hands.py
 │   ├── compute_normalization.py
-│   ├── convert_gigahands_to_mdm.py
-│   ├── convert_gigahands_to_mdm_2Hands.py
-│   ├── convert_jsonl_to_dmvb_npy.py
-│   ├── create_train_subset.py
+│   ├── generate_file_list.py
+│   ├── old/
+│   │   ├── clarify_annotion_analysis.ipynb
+│   │   ├── compute_asl_mean_std.py
+│   │   ├── convert_gigahands_to_mdm.py
+│   │   ├── convert_jsonl_to_dmvb_npy.py
+│   │   ├── find_closest_motions.py
+│   │   ├── make_gigahands_train_diez.py
+│   │   ├── plot_closest_motions.py
+│   │   └── sanity_check.py
+│   ├── plot_closest_motions.ipynb
+│   └── trainprep/
+│       ├── compute_mean_std_2Hands.py
+│       ├── compute_mean_std_velocity.py
+│       ├── convert_gigahands_to_mdm_2Hands.py
+│       ├── convert_gigahands_to_velocity.py
+│       └── create_train_subset.py
+├── semantic_spaces/
+│   ├── compare_word_motion_spaces.ipynb
 │   ├── distance_graphs_motionSpace.ipynb
 │   ├── distance_graphs_wordSpace.ipynb
-│   ├── find_closest_motions.py
-│   ├── generate_file_list.py
-│   ├── make_gigahands_train_diez.py
-│   ├── plot_closest_motions.ipynb
-│   ├── plot_closest_motions.py
-│   ├── sanity_check.py
-│   └── testingscript.py
-├── test.jsonl
+│   ├── motion_space_dtw_matrix.npy
+│   ├── motion_space_labels.json
+│   ├── word_space_dist_matrix.npy
+│   └── word_space_labels.json
+├── test.js
 ├── tests/
-│   └── test_gigahands_loader.py
+│   ├── test_gigahands_loader.py
+│   └── tester_velocity_consistency.py
 ├── train/
 │   ├── train_mdm.py
 │   ├── train_mdm_test.py

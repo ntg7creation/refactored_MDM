@@ -1,5 +1,6 @@
 from os.path import join as pjoin
-
+from mdm_globals import DMVB_DIM
+from LOG.logger import LOG
 from data_loaders.humanml.common.skeleton import Skeleton
 import numpy as np
 import os
@@ -419,9 +420,12 @@ def recover_from_rot(data, joints_num, skeleton):
 
     return positions
 
+
 def recover_rot(data):
-    # dataset [bs, seqlen, 263/251] HumanML/KIT
-    joints_num = 22 if data.shape[-1] == 126 else 21
+    # dataset [bs, seqlen, 263/251] HumanML/
+
+    LOG.log("[recover_rot] data:", data.shape)
+    joints_num = 22 if data.shape[-1] == DMVB_DIM else 21
     r_rot_quat, r_pos = recover_root_rot_pos(data)
     r_pos_pad = torch.cat([r_pos, torch.zeros_like(r_pos)], dim=-1).unsqueeze(-2)
     r_rot_cont6d = quaternion_to_cont6d(r_rot_quat)

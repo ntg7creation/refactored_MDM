@@ -3,7 +3,7 @@ import builtins
 
 # Folders to ignore (by name, anywhere in the tree)
 IGNORE_FOLDERS = {
-    ".git", "node_modules", "dist", "build", "__pycache__", "data", "datasets", "save", ".pytest_cache","ASL_Data"
+    ".git", "node_modules", "dist", "build", "__pycache__", "data", "datasets", "save", ".pytest_cache","ASL_Data" ,"converted_velocity"
 }
 
 # Folders to ignore by relative path (from root)

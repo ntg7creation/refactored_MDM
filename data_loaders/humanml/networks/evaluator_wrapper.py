@@ -1,6 +1,8 @@
 from data_loaders.humanml.networks.modules import *
 from data_loaders.humanml.utils.word_vectorizer import POS_enumerator
 from os.path import join as pjoin
+from mdm_globals import DMVB_DIM
+from LOG.logger import LOG
 
 def build_models(opt):
     movement_enc = MovementConvEncoder(opt.dim_pose-4, opt.dim_movement_enc_hidden, opt.dim_movement_latent)
@@ -29,7 +31,7 @@ class EvaluatorModelWrapper(object):
     def __init__(self, opt):
 
         if opt.dataset_name == 't2m' or opt.dataset_name == 'gigadataset':
-            opt.dim_pose = 126
+            opt.dim_pose = DMVB_DIM
         elif opt.dataset_name == 'kit':
             opt.dim_pose = 251
         else:
@@ -121,6 +123,8 @@ def build_evaluators(opt):
 class EvaluatorMDMWrapper(object):
 
     def __init__(self, dataset_name, device):
+
+        LOG.log("Initializing EvaluatorMDMWrapper")
         opt = {
             'dataset_name': dataset_name,
             'device': device,
@@ -131,7 +135,7 @@ class EvaluatorMDMWrapper(object):
             'max_text_len': 20,
             'dim_text_hidden': 512,
             'dim_coemb_hidden': 512,
-            'dim_pose': 126 if dataset_name == 'humanml' else 126,
+            'dim_pose': DMVB_DIM if dataset_name == 'humanml' else DMVB_DIM,
             'dim_movement_enc_hidden': 512,
             'dim_movement_latent': 512,
             'checkpoints_dir': '.',

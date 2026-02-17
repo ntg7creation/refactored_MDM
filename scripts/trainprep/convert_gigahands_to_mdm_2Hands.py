@@ -16,10 +16,10 @@ def strip_w(pts):
 def convert_sequence_xyz(frames_xyz):
     """
     Convert raw 3D joint sequence into flat XYZ positions only.
-    Output shape: [T, 66] where 66 = 22 joints × 3 coords.
+    Output shape: [T, 63] where 63 = 21 joints × 3 coords.
     """
-    positions = np.array(frames_xyz, dtype=np.float32)  # [T, 22, 3]
-    flat_xyz = positions.reshape(positions.shape[0], -1)  # [T, 66]
+    positions = np.array(frames_xyz, dtype=np.float32)  # [T, 21, 3]
+    flat_xyz = positions.reshape(positions.shape[0], -1)  # [T, 63]
     return flat_xyz
 
 def main():
@@ -71,15 +71,15 @@ def main():
             right_filtered = [right_frames[i] for i in common_indices if i < len(right_frames)]
 
             # Convert to flat xyz
-            motion_left = convert_sequence_xyz([strip_w(f) for f in left_filtered])   # [T, 66]
-            motion_right = convert_sequence_xyz([strip_w(f) for f in right_filtered]) # [T, 66]
+            motion_left = convert_sequence_xyz([strip_w(f) for f in left_filtered])   # [T, 63]
+            motion_right = convert_sequence_xyz([strip_w(f) for f in right_filtered]) # [T, 63]
 
             # Ensure same length (safety check)
             min_len = min(len(motion_left), len(motion_right))
             motion_left = motion_left[:min_len]
             motion_right = motion_right[:min_len]
 
-            # Combine: [XYZ_left, XYZ_right] -> [T, 132]
+            # Combine: [XYZ_left, XYZ_right] -> [T, 126]
             motion_combined = np.concatenate([motion_left, motion_right], axis=1)
 
             # Save combined file

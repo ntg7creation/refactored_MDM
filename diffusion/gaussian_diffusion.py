@@ -1221,6 +1221,98 @@ class GaussianDiffusion:
         output = th.where((t == 0), decoder_nll, kl)
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
+
+    def integrate_vel_to_pos(self, pos0, vel):
+        """
+        pos0: [B, 42, 3]       (position at t=0)
+        vel:  [B, 42, 3, T]    (velocity per frame, vel[...,0] usually 0)
+        returns: [B, 42, 3, T]
+        """
+        disp = th.cumsum(vel, dim=-1)                 # [B,42,3,T]
+        return pos0.unsqueeze(-1) + disp              # [B,42,3,T]
+
+    def _split_pos_vel_xyz(self, x_denorm):
+        """
+        x_denorm: [B, D, 1, T]  where D = 2 * (J*3)
+        returns:
+        pos: [B, J, 3, T]
+        vel: [B, J, 3, T]
+        """
+        assert x_denorm.ndim == 4, f"expected 4D, got {x_denorm.shape}"
+        B, D, F, T = x_denorm.shape
+        assert F == 1, f"expected nfeats=1, got {F}"
+
+        half = D // 2
+        assert D % 2 == 0, f"D must be even (pos+vel), got {D}"
+        assert half % 3 == 0, f"half must be divisible by 3 (xyz), got {half}"
+
+        J = half // 3  # number of joints in xyz space (should be 42)
+
+        pos_flat = x_denorm[:, :half, 0, :]      # [B, half, T]
+        vel_flat = x_denorm[:, half:half*2, 0, :]# [B, half, T]
+
+        pos = pos_flat.view(B, J, 3, T)          # [B, J, 3, T]
+        vel = vel_flat.view(B, J, 3, T)          # [B, J, 3, T]
+        return pos, vel
+
+    def get_target_loc_gigahands(self, x_norm, mean, std, lengths, joint_ids):
+        """
+        Extract last-frame XYZ position for selected joints from your flattened DMVB.
+        Works when x_norm is [B, 252, 1, T] (pos+vel flattened).
+        Returns: [B, K, 3]
+        """
+        assert x_norm.ndim == 4
+        device = x_norm.device
+        dtype = x_norm.dtype
+
+        mean = th.as_tensor(mean, device=device, dtype=dtype)
+        std  = th.as_tensor(std,  device=device, dtype=dtype)
+        lengths = th.as_tensor(lengths, device=device)
+
+        x = x_norm * std + mean  # [B, 252, 1, T]
+        pos, _ = self._split_pos_vel_xyz(x)  # pos: [B, 42, 3, T]
+
+        B, J, C, T = pos.shape
+        assert C == 3
+        assert max(joint_ids) < J
+
+        t_idx = (lengths - 1).clamp(min=0).view(B, 1, 1, 1)
+        last_pos = pos.gather(dim=3, index=t_idx.expand(B, J, 3, 1)).squeeze(-1)  # [B,J,3]
+
+        joint_ids = th.tensor(joint_ids, device=device, dtype=th.long)
+        return last_pos.index_select(dim=1, index=joint_ids)  # [B,K,3]
+
+    def get_target_loc_from_vel_gigahands(self, x_norm, mean, std, lengths, joint_ids):
+        """
+        Compute last-frame XYZ by integrating velocity joints:
+        pos_hat(t) = pos0 + cumsum(vel)
+        Returns: [B, K, 3]
+        """
+        assert x_norm.ndim == 4
+        device = x_norm.device
+        dtype = x_norm.dtype
+
+        mean = th.as_tensor(mean, device=device, dtype=dtype)
+        std  = th.as_tensor(std,  device=device, dtype=dtype)
+        lengths = th.as_tensor(lengths, device=device)
+
+        x = x_norm * std + mean  # [B,252,1,T]
+        pos, vel = self._split_pos_vel_xyz(x)  # both [B,42,3,T]
+
+        B, J, C, T = pos.shape
+        assert C == 3
+        assert max(joint_ids) < J
+
+        pos0 = pos[:, :, :, 0]                 # [B,J,3]
+        pos_hat = pos0.unsqueeze(-1) + th.cumsum(vel, dim=-1)  # [B,J,3,T]
+
+        t_idx = (lengths - 1).clamp(min=0).view(B, 1, 1, 1)
+        last_pos = pos_hat.gather(dim=3, index=t_idx.expand(B, J, 3, 1)).squeeze(-1)  # [B,J,3]
+
+        joint_ids = th.tensor(joint_ids, device=device, dtype=th.long)
+        return last_pos.index_select(dim=1, index=joint_ids)  # [B,K,3]
+
+
     def training_losses(self, model, x_start, t, model_kwargs=None, noise=None, dataset=None):
         """
         Compute training losses for a single timestep.
@@ -1331,20 +1423,61 @@ class GaussianDiffusion:
                     terms["fc"] = self.masked_l2(pred_vel,
                                                  torch.zeros(pred_vel.shape, device=pred_vel.device),
                                                  mask[:, :, :, 1:])
+            # --------------------------- mdm original version --------------------------- #
+            # if self.lambda_vel > 0.:
+            #     target_vel = (target[..., 1:] - target[..., :-1])
+            #     model_output_vel = (model_output[..., 1:] - model_output[..., :-1])
+            #     terms["vel_mse"] = self.masked_l2(target_vel[:, :-1, :, :], # Remove last joint, is the root location!
+            #                                       model_output_vel[:, :-1, :, :],
+            #                                       mask[:, :, :, 1:])  # mean_flat((target_vel - model_output_vel) ** 2)
+            # --------------------------- my version --------------------------- #
             if self.lambda_vel > 0.:
-                target_vel = (target[..., 1:] - target[..., :-1])
-                model_output_vel = (model_output[..., 1:] - model_output[..., :-1])
-                terms["vel_mse"] = self.masked_l2(target_vel[:, :-1, :, :], # Remove last joint, is the root location!
-                                                  model_output_vel[:, :-1, :, :],
-                                                  mask[:, :, :, 1:])  # mean_flat((target_vel - model_output_vel) ** 2)
+                target_vel = target[:, :, :, 1:] - target[:, :, :, :-1]
+                model_output_vel = model_output[:, :, :, 1:] - model_output[:, :, :, :-1]
+                terms["vel_mse"] = self.masked_l2(target_vel, model_output_vel, mask[:, :, :, 1:])
+
+            # old target location loss calculation
+            # if self.lambda_target_loc > 0.:
+            #     assert self.model_mean_type == ModelMeanType.START_X, 'This feature supports only X_start pred for now!'
+            #     ref_target = model_kwargs['y']['target_cond']
+            #     pred_target = get_target_location(model_output, dataset.mean_gpu, dataset.std_gpu, 
+            #                                 model_kwargs['y']['lengths'], dataset.t2m_dataset.opt.joints_num, model.all_goal_joint_names, 
+            #                                 model_kwargs['y']['target_joint_names'], model_kwargs['y']['is_heading'])
+            #     terms["target_loc"] = masked_goal_l2(pred_target, ref_target, model_kwargs['y'], model.all_goal_joint_names)
+
             
+            # after denorm:
             if self.lambda_target_loc > 0.:
-                assert self.model_mean_type == ModelMeanType.START_X, 'This feature supports only X_start pred for now!'
-                ref_target = model_kwargs['y']['target_cond']
-                pred_target = get_target_location(model_output, dataset.mean_gpu, dataset.std_gpu, 
-                                            model_kwargs['y']['lengths'], dataset.t2m_dataset.opt.joints_num, model.all_goal_joint_names, 
-                                            model_kwargs['y']['target_joint_names'], model_kwargs['y']['is_heading'])
-                terms["target_loc"] = masked_goal_l2(pred_target, ref_target, model_kwargs['y'], model.all_goal_joint_names)
+                assert self.model_mean_type == ModelMeanType.START_X
+                y = model_kwargs["y"]
+
+                ref_target = self.get_target_loc_gigahands(
+                    target,
+                    dataset.mean_gpu,
+                    dataset.std_gpu,
+                    y["lengths"],
+                    joint_ids=[0, 21],
+                )
+
+                pred_target = self.get_target_loc_from_vel_gigahands(
+                    model_output,
+                    dataset.mean_gpu,
+                    dataset.std_gpu,
+                    y["lengths"],
+                    joint_ids=[0, 21],
+                )
+
+                terms["target_loc"] = ((pred_target - ref_target) ** 2).mean(dim=(1, 2))
+
+                # print(
+                #     f"[TARGET_LOC_FROM_VEL DEBUG] "
+                #     f"pred_mean={pred_target.mean().item():.6f} pred_std={pred_target.std().item():.6f} | "
+                #     f"ref_mean={ref_target.mean().item():.6f} ref_std={ref_target.std().item():.6f} | "
+                #     f"mse={terms['target_loc'].mean().item():.6f}"
+                # )
+
+
+            
                             
             #TODO bring back old loss calculation 
 
@@ -1355,10 +1488,36 @@ class GaussianDiffusion:
             #                 (self.lambda_fc * terms.get('fc', 0.))
 
             
-            terms["loss"] = terms["rot_mse"]
+            # terms["loss"] = terms["rot_mse"]
+
+            terms["loss"] = terms["rot_mse"] 
+                            # self.lambda_vel * terms.get("vel_mse", 0.0) + 
+                            # self.lambda_target_loc * terms.get("target_loc", 0.0))
 
         else:
             raise NotImplementedError(self.loss_type)
+
+        # if self.lambda_target_loc > 0.:
+        #     print(
+        #     f"[TARGET_LOC_FROM_VEL DEBUG] "
+        #     f"pred_mean={pred.mean().item():.6f} pred_std={pred.std().item():.6f} | "
+        #     f"ref_mean={ref.mean().item():.6f} ref_std={ref.std().item():.6f} | "
+        #     f"mse={terms['target_loc'].mean().item():.6f}"
+        #     )
+
+
+        # if self.lambda_vel > 0:
+        #     print(
+        #         f"[LOSS DEBUG] "
+        #         f"rot_mse_mean={terms['rot_mse'].mean().item():.6f} | "
+        #         f"vel_mse_mean={terms['vel_mse'].mean().item():.6f} | "
+        #         f"total_mean={terms['loss'].mean().item():.6f}"
+        #     )
+        # else:
+        #     raise SystemExit("Stopping due to LOSS DEBUG failure.")
+
+
+            
 
         return terms
 

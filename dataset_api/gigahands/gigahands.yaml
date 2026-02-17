@@ -58,7 +58,7 @@ noise_schedule: cosine
 diffusion_steps: 50
 sigma_small: True
 
-save_dir: save/test_custom500_concat_11_4
+save_dir: save/test_custom_velocity_target_500
 #test_dual_concat_identity - need to test if this works
 overwrite: False
 lr: 0.0001
@@ -92,5 +92,5 @@ autoregressive: False
 autoregressive_include_prefix: False
 autoregressive_init: data
 
-DMVB_size: 126 # default, change later
+DMVB_size: 252 # default, change later
 DMVB_layout: root+5
